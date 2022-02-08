@@ -1,0 +1,40 @@
+# Snippet to allow working with git checkouts of project sites that become
+# toplevel directories.
+(subproject) {
+	# Caddy doesn't know this is a directory, so redirect to trailing / as
+	# would usually happen for them.
+	redir /{args.0} /{args.0}/ permanent
+
+	handle_path /{args.0}/* {
+		root * {args.0}
+		file_server
+	}
+}
+
+# Set this variable in the environment when running in production.
+{$SITE_ADDRESS::2015} {
+	root * .
+
+	import subproject basemap
+	import subproject cheatsheets
+	import subproject governance
+	import subproject matplotblog
+	import subproject mpl-altair
+	import subproject mpl-bench
+	import subproject mpl-third-party
+
+	# Place the brochure site at the top level.
+	import subproject mpl-brochure-site
+	@brochure file {
+		root mpl-brochure-site
+		try_files {path}
+	}
+	rewrite / /mpl-brochure-site/index.html
+	rewrite @brochure /mpl-brochure-site{http.matchers.file.relative}
+
+	# Finally try any of the versioned docs.
+	handle {
+		root * matplotlib.github.com
+		file_server
+	}
+}
