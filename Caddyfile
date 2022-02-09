@@ -7,6 +7,7 @@
 
 	handle_path /{args.0}/* {
 		root * {$SITE_DIR:sites}/{args.0}
+		try_files {path}.html {path}
 		file_server
 	}
 }
@@ -27,6 +28,7 @@
 	import subproject mpl-brochure-site
 	@brochure file {
 		root {$SITE_DIR:sites}/mpl-brochure-site
+		try_files {path}.html {path}
 	}
 	rewrite / /mpl-brochure-site/index.html
 	rewrite @brochure /mpl-brochure-site{http.matchers.file.relative}
@@ -34,6 +36,7 @@
 	# Finally try any of the versioned docs.
 	handle {
 		root * {$SITE_DIR:sites}/matplotlib.github.com
+		try_files {path}.html {path}
 		file_server
 	}
 }
