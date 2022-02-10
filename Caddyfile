@@ -33,6 +33,49 @@
 	rewrite / /mpl-brochure-site/index.html
 	rewrite @brochure /mpl-brochure-site{http.matchers.file.relative}
 
+	route /webhook {
+		webhook {
+			repo https://github.com/matplotlib/basemap.git
+			path {$SITE_DIR:sites}/basemap
+			branch gh-pages
+		}
+		webhook {
+			repo https://github.com/matplotlib/cheatsheets.git
+			path {$SITE_DIR:sites}/cheatsheets
+			branch gh-pages
+		}
+		webhook {
+			repo https://github.com/matplotlib/governance.git
+			path {$SITE_DIR:sites}/governance
+			branch gh-pages
+		}
+		webhook {
+			repo https://github.com/matplotlib/matplotblog.git
+			path {$SITE_DIR:sites}/matplotblog
+			branch gh-pages
+		}
+		webhook {
+			repo https://github.com/matplotlib/mpl-altair.git
+			path {$SITE_DIR:sites}/mpl-altair
+			branch gh-pages
+		}
+		webhook {
+			repo https://github.com/matplotlib/mpl-bench.git
+			path {$SITE_DIR:sites}/mpl-bench
+			branch gh-pages
+		}
+		webhook {
+			repo https://github.com/matplotlib/mpl-third-party.git
+			path {$SITE_DIR:sites}/mpl-third-party
+			branch gh-pages
+		}
+		webhook {
+			repo https://github.com/matplotlib/mpl-brochure-site.git
+			path {$SITE_DIR:sites}/mpl-brochure-site
+			branch gh-pages
+		}
+	}
+
 	# Finally try any of the versioned docs.
 	handle {
 		root * {$SITE_DIR:sites}/matplotlib.github.com
