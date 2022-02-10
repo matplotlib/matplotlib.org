@@ -9,6 +9,7 @@ env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
   CADDY_VERSION: "2.4.6"
+  CADDY_GIT_VERSION: "1.0.4"
 
 jobs:
   build-and-push-image:
@@ -41,6 +42,7 @@ jobs:
           file: ./Containerfile
           build-args: |
             CADDY_VERSION=${{ env.CADDY_VERSION }}
+            CADDY_GIT_VERSION=${{ env.CADDY_GIT_VERSION }}
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}

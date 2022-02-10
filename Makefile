@@ -1,6 +1,7 @@
 RUNTIME ?= podman
 CADDY_IMAGE ?= caddy-mpl
 CADDY_VERSION ?= 2.4.6
+CADDY_GIT_VERSION ?= 1.0.4
 
 serve:
 	mkdir -p sites
@@ -15,6 +16,7 @@ serve:
 image:
 	$(RUNTIME) build \
 	    --build-arg=CADDY_VERSION=$(CADDY_VERSION) \
+	    --build-arg=CADDY_GIT_VERSION=v$(CADDY_GIT_VERSION) \
 	    -t $(CADDY_IMAGE):$(CADDY_VERSION) \
 	    -f Containerfile
 

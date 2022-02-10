@@ -1,3 +1,53 @@
+{
+	git {
+		repo basemap {
+			base_dir {$SITE_DIR:sites}
+			url https://github.com/matplotlib/basemap.git
+			branch gh-pages
+		}
+		repo cheatsheets {
+			base_dir {$SITE_DIR:sites}
+			url https://github.com/matplotlib/cheatsheets.git
+			branch gh-pages
+		}
+		repo governance {
+			base_dir {$SITE_DIR:sites}
+			url https://github.com/matplotlib/governance.git
+			branch gh-pages
+		}
+		repo matplotblog {
+			base_dir {$SITE_DIR:sites}
+			url https://github.com/matplotlib/matplotblog.git
+			branch gh-pages
+		}
+		repo matplotlib.github.com {
+			base_dir {$SITE_DIR:sites}
+			url https://github.com/matplotlib/matplotlib.github.com.git
+			branch main
+		}
+		repo mpl-altair {
+			base_dir {$SITE_DIR:sites}
+			url https://github.com/matplotlib/mpl-altair.git
+			branch gh-pages
+		}
+		repo mpl-bench {
+			base_dir {$SITE_DIR:sites}
+			url https://github.com/matplotlib/mpl-bench.git
+			branch gh-pages
+		}
+		repo mpl-brochure-site {
+			base_dir {$SITE_DIR:sites}
+			url https://github.com/matplotlib/mpl-brochure-site.git
+			branch gh-pages
+		}
+		repo mpl-third-party {
+			base_dir {$SITE_DIR:sites}
+			url https://github.com/matplotlib/mpl-third-party.git
+			branch gh-pages
+		}
+	}
+}
+
 # Snippet to allow working with git checkouts of project sites that become
 # toplevel directories.
 (subproject) {
@@ -9,6 +59,9 @@
 		root * {$SITE_DIR:sites}/{args.0}
 		try_files {path}.html {path}
 		file_server
+	}
+	route /webhook/{args.0} {
+		git update repo {args.0}
 	}
 }
 
