@@ -125,15 +125,15 @@ async def test_github_webhook_errors(aiohttp_client, monkeypatch):
 
     resp = await client.post(
         '/gh/non-existent-repo', headers=valid_headers,
-        data='{"sender": "QuLogic", "organization": "foo",'
-             ' "repository": "foo"}')
+        data='{"sender": {"login": "QuLogic"},'
+             ' "repository": {"name": "foo", "owner": {"login": "foo"}}}')
     assert resp.status == 400
     assert 'incorrect organization' in await resp.text()
 
     resp = await client.post(
         '/gh/non-existent-repo', headers=valid_headers,
-        data='{"sender": "QuLogic", "organization": "matplotlib",'
-             ' "repository": "foo"}')
+        data='{"sender": {"login": "QuLogic"}, "repository":'
+             ' {"name": "foo", "owner": {"login": "matplotlib"}}}')
     assert resp.status == 400
     assert 'incorrect repository' in await resp.text()
 
@@ -158,10 +158,10 @@ async def test_github_webhook_valid(aiohttp_client, monkeypatch):
     resp = await client.post(
         '/gh/non-existent-repo',
         headers={**valid_headers, 'X-GitHub-Event': 'ping'},
-        data='{"sender": "QuLogic", "hook_id": 1234,'
+        data='{"sender": {"login": "QuLogic"}, "hook_id": 1234,'
              ' "zen": "Beautiful is better than ugly.",'
-             ' "organization": "matplotlib",'
-             ' "repository": "non-existent-repo"}')
+             ' "repository": {"name": "non-existent-repo",'
+             ' "owner": {"login": "matplotlib"}}}')
     assert resp.status == 200
     ur_mock.assert_not_called()
 
@@ -169,8 +169,9 @@ async def test_github_webhook_valid(aiohttp_client, monkeypatch):
     resp = await client.post(
         '/gh/non-existent-repo',
         headers={**valid_headers, 'X-GitHub-Event': 'push'},
-        data='{"sender": "QuLogic", "organization": "matplotlib",'
-             ' "repository": "non-existent-repo"}')
+        data='{"sender": {"login": "QuLogic"},'
+             ' "repository": {"name": "non-existent-repo",'
+             ' "owner": {"login": "matplotlib"}}}')
     assert resp.status == 200
     ur_mock.assert_called_once_with(
         Path('non-existent-site-dir/non-existent-repo'), 'foo',

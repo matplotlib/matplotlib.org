@@ -100,9 +100,13 @@ async def github_webhook(request: web.Request):
 
     # https://docs.github.com/en/developers/webhooks-and-events/webhooks/webhook-events-and-payloads#webhook-payload-object-common-properties
     try:
-        sender = data['sender']
-        organization = data['organization']
+        sender = data['sender']['login']
         repository = data['repository']
+    except (KeyError, TypeError):
+        raise web.HTTPBadRequest(reason='Missing required fields')
+    try:
+        organization = repository['owner']['login']
+        repository = repository['name']
     except KeyError:
         raise web.HTTPBadRequest(reason='Missing required fields')
     log.info('%s: Received %s event from %s on %s/%s',
