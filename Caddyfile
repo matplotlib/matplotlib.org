@@ -7,8 +7,8 @@
 
 	handle_path /{args.0}/* {
 		root * {$SITE_DIR:sites}/{args.0}
-		try_files {path}.html {path}
-		file_server
+	try_files {path}.html {path}
+	file_server
 	}
 }
 
@@ -16,13 +16,13 @@
 {$SITE_ADDRESS::2015} {
 	root * .
 
-	import subproject basemap
-	import subproject cheatsheets
-	import subproject governance
-	import subproject matplotblog
-	import subproject mpl-altair
-	import subproject mpl-bench
-	import subproject mpl-third-party
+import subproject basemap
+import subproject cheatsheets
+import subproject governance
+import subproject matplotblog
+import subproject mpl-altair
+import subproject mpl-bench
+import subproject mpl-third-party
 
 	# Place the brochure site at the top level.
 	import subproject mpl-brochure-site
@@ -36,7 +36,7 @@
 	# Finally try any of the versioned docs.
 	handle {
 		root * {$SITE_DIR:sites}/matplotlib.github.com
-		try_files {path}.html {path}
+	try_files {path}.html {path}
 		file_server
 	}
 }
