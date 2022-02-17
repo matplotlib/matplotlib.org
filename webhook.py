@@ -83,6 +83,10 @@ async def github_webhook(request: web.Request):
         signature = request.headers['X-Hub-Signature-256']
     except KeyError:
         raise web.HTTPBadRequest(reason='No signature given')
+    try:
+        event = request.headers['X-GitHub-Event']
+    except KeyError:
+        raise web.HTTPBadRequest(reason='No event given')
     repo = request.match_info.get('repo')
     log.info('%s: Received webhook for %s', delivery, repo)
 
@@ -96,26 +100,25 @@ async def github_webhook(request: web.Request):
 
     # https://docs.github.com/en/developers/webhooks-and-events/webhooks/webhook-events-and-payloads#webhook-payload-object-common-properties
     try:
-        action = data['action']
         sender = data['sender']
         organization = data['organization']
         repository = data['repository']
     except KeyError:
         raise web.HTTPBadRequest(reason='Missing required fields')
     log.info('%s: Received %s event from %s on %s/%s',
-             delivery, action, sender, organization, repository)
+             delivery, event, sender, organization, repository)
 
     if organization != 'matplotlib':
         raise web.HTTPBadRequest(reason=f'{delivery}: incorrect organization')
     if repository != repo:
         raise web.HTTPBadRequest(reason=f'{delivery}: incorrect repository')
 
-    if action == 'ping':
+    if event == 'ping':
         log.info('%s: Ping %s: %s', delivery, data['hook_id'], data['zen'])
         return web.Response(status=200)
 
-    if action != 'push':
-        log.info('%s: Ignoring webhook for unused action %s', delivery, action)
+    if event != 'push':
+        log.info('%s: Ignoring webhook for unused event %s', delivery, event)
         return web.Response(status=200)
 
     checkout = Path(os.environ.get('SITE_DIR', 'sites'), repository)

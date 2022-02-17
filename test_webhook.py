@@ -105,35 +105,35 @@ async def test_github_webhook_errors(aiohttp_client, monkeypatch):
     monkeypatch.setattr(webhook, 'verify_signature',
                         mock.Mock(verify_signature, return_value=True))
 
+    valid_headers = {
+        'X-GitHub-Delivery': 'foo',
+        'X-Hub-Signature-256': 'unused',
+        'X-GitHub-Event': 'ping',
+    }
+
     # Data should be JSON.
-    resp = await client.post(
-        '/gh/non-existent-repo',
-        headers={'X-GitHub-Delivery': 'foo', 'X-Hub-Signature-256': 'unused'},
-        data='}{')
+    resp = await client.post('/gh/non-existent-repo', headers=valid_headers,
+                             data='}{')
     assert resp.status == 400
     assert 'Invalid data input' in await resp.text()
 
     # Some data fields are required.
-    resp = await client.post(
-        '/gh/non-existent-repo',
-        headers={'X-GitHub-Delivery': 'foo', 'X-Hub-Signature-256': 'unused'},
-        data='{}')
+    resp = await client.post('/gh/non-existent-repo', headers=valid_headers,
+                             data='{}')
     assert resp.status == 400
     assert 'Missing required fields' in await resp.text()
 
     resp = await client.post(
-        '/gh/non-existent-repo',
-        headers={'X-GitHub-Delivery': 'foo', 'X-Hub-Signature-256': 'unused'},
-        data='{"action": "ping", "sender": "QuLogic", "organization": "foo",'
+        '/gh/non-existent-repo', headers=valid_headers,
+        data='{"sender": "QuLogic", "organization": "foo",'
              ' "repository": "foo"}')
     assert resp.status == 400
     assert 'incorrect organization' in await resp.text()
 
     resp = await client.post(
-        '/gh/non-existent-repo',
-        headers={'X-GitHub-Delivery': 'foo', 'X-Hub-Signature-256': 'unused'},
-        data='{"action": "ping", "sender": "QuLogic", '
-             '"organization": "matplotlib", "repository": "foo"}')
+        '/gh/non-existent-repo', headers=valid_headers,
+        data='{"sender": "QuLogic", "organization": "matplotlib",'
+             ' "repository": "foo"}')
     assert resp.status == 400
     assert 'incorrect repository' in await resp.text()
 
@@ -149,11 +149,16 @@ async def test_github_webhook_valid(aiohttp_client, monkeypatch):
     ur_mock = mock.Mock(update_repo, return_value=None)
     monkeypatch.setattr(webhook, 'update_repo', ur_mock)
 
+    valid_headers = {
+        'X-GitHub-Delivery': 'foo',
+        'X-Hub-Signature-256': 'unused',
+    }
+
     # Ping event just returns success.
     resp = await client.post(
         '/gh/non-existent-repo',
-        headers={'X-GitHub-Delivery': 'foo', 'X-Hub-Signature-256': 'unused'},
-        data='{"action": "ping", "sender": "QuLogic", "hook_id": "foo",'
+        headers={**valid_headers, 'X-GitHub-Event': 'ping'},
+        data='{"sender": "QuLogic", "hook_id": 1234,'
              ' "zen": "Beautiful is better than ugly.",'
              ' "organization": "matplotlib",'
              ' "repository": "non-existent-repo"}')
@@ -163,9 +168,8 @@ async def test_github_webhook_valid(aiohttp_client, monkeypatch):
     # Push event should run an update.
     resp = await client.post(
         '/gh/non-existent-repo',
-        headers={'X-GitHub-Delivery': 'foo', 'X-Hub-Signature-256': 'unused'},
-        data='{"action": "push", "sender": "QuLogic",'
-             ' "organization": "matplotlib",'
+        headers={**valid_headers, 'X-GitHub-Event': 'push'},
+        data='{"sender": "QuLogic", "organization": "matplotlib",'
              ' "repository": "non-existent-repo"}')
     assert resp.status == 200
     ur_mock.assert_called_once_with(
