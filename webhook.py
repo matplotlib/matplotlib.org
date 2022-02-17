@@ -35,6 +35,7 @@ async def update_repo(repo: Path, delivery: str, name: str):
         raise web.HTTPServerError(
             reason=f'{delivery}: Checkout for {name} does not exist')
 
+    log.info('%s: Running git pull for %s at %s', delivery, name, repo)
     proc = await asyncio.create_subprocess_exec('git', 'pull', cwd=repo)
     try:
         await asyncio.wait_for(proc.wait(), timeout=60)
@@ -117,12 +118,22 @@ async def github_webhook(request: web.Request):
     if repository != repo:
         raise web.HTTPBadRequest(reason=f'{delivery}: incorrect repository')
 
+    # Ping event
+    # https://docs.github.com/en/developers/webhooks-and-events/webhooks/webhook-events-and-payloads#ping
     if event == 'ping':
         log.info('%s: Ping %s: %s', delivery, data['hook_id'], data['zen'])
         return web.Response(status=200)
 
+    # Only allow push events otherwise
+    # https://docs.github.com/en/developers/webhooks-and-events/webhooks/webhook-events-and-payloads#push
     if event != 'push':
         log.info('%s: Ignoring webhook for unused event %s', delivery, event)
+        return web.Response(status=200)
+
+    ref = data.get('ref', '')
+    if ref != 'refs/heads/gh-pages':
+        log.info('%s: Ignoring push event on branch %s other than gh-pages',
+                 delivery, ref)
         return web.Response(status=200)
 
     checkout = Path(os.environ.get('SITE_DIR', 'sites'), repository)

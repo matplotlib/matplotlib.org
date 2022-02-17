@@ -165,11 +165,23 @@ async def test_github_webhook_valid(aiohttp_client, monkeypatch):
     assert resp.status == 200
     ur_mock.assert_not_called()
 
-    # Push event should run an update.
+    # Push event to main branch should do nothing.
     resp = await client.post(
         '/gh/non-existent-repo',
         headers={**valid_headers, 'X-GitHub-Event': 'push'},
         data='{"sender": {"login": "QuLogic"},'
+             ' "ref": "refs/heads/main",'
+             ' "repository": {"name": "non-existent-repo",'
+             ' "owner": {"login": "matplotlib"}}}')
+    assert resp.status == 200
+    ur_mock.assert_not_called()
+
+    # Push event to gh-pages branch should run an update.
+    resp = await client.post(
+        '/gh/non-existent-repo',
+        headers={**valid_headers, 'X-GitHub-Event': 'push'},
+        data='{"sender": {"login": "QuLogic"},'
+             ' "ref": "refs/heads/gh-pages",'
              ' "repository": {"name": "non-existent-repo",'
              ' "owner": {"login": "matplotlib"}}}')
     assert resp.status == 200
