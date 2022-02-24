@@ -35,14 +35,6 @@ async def test_signature(monkeypatch):
         'unused')
 
 
-async def test_update_repo_error():
-    """Test that updating a repository fails as expected."""
-    with pytest.raises(web.HTTPServerError,
-                       match='non-existent does not exist'):
-        await update_repo(Path('non-existent'), 'unused',
-                          'matplotlib/non-existent')
-
-
 async def test_update_repo_empty(tmp_path_factory):
     """Test that updating an empty repository works as expected."""
     repo1 = tmp_path_factory.mktemp('repo1')
@@ -137,15 +129,25 @@ async def test_github_webhook_errors(aiohttp_client, monkeypatch):
     assert resp.status == 400
     assert 'incorrect repository' in await resp.text()
 
+    # Problem on our side.
+    resp = await client.post(
+        '/gh/non-existent',
+        headers={**valid_headers, 'X-GitHub-Event': 'push'},
+        data='{"sender": {"login": "QuLogic"}, "ref": "refs/heads/gh-pages", '
+             '"repository": {"name": "non-existent", '
+             '"owner": {"login": "matplotlib"}}}')
+    assert resp.status == 500
+    assert 'non-existent does not exist' in await resp.text()
 
-async def test_github_webhook_valid(aiohttp_client, monkeypatch):
+
+async def test_github_webhook_valid(aiohttp_client, monkeypatch, tmp_path):
     """Test valid input to webhook."""
     client = await aiohttp_client(create_app())
 
     # Do no actual work, since that's tested above.
     monkeypatch.setattr(webhook, 'verify_signature',
                         mock.Mock(verify_signature, return_value=True))
-    monkeypatch.setenv('SITE_DIR', 'non-existent-site-dir')
+    monkeypatch.setenv('SITE_DIR', str(tmp_path))
     ur_mock = mock.Mock(update_repo, return_value=None)
     monkeypatch.setattr(webhook, 'update_repo', ur_mock)
 
@@ -177,6 +179,8 @@ async def test_github_webhook_valid(aiohttp_client, monkeypatch):
     ur_mock.assert_not_called()
 
     # Push event to gh-pages branch should run an update.
+    tmp_repo = tmp_path / 'non-existent-repo'
+    (tmp_repo / '.git').mkdir(parents=True, exist_ok=True)
     resp = await client.post(
         '/gh/non-existent-repo',
         headers={**valid_headers, 'X-GitHub-Event': 'push'},
@@ -186,5 +190,4 @@ async def test_github_webhook_valid(aiohttp_client, monkeypatch):
              ' "owner": {"login": "matplotlib"}}}')
     assert resp.status == 200
     ur_mock.assert_called_once_with(
-        Path('non-existent-site-dir/non-existent-repo'), 'foo',
-        'matplotlib/non-existent-repo')
+        tmp_repo, 'foo', 'matplotlib/non-existent-repo')

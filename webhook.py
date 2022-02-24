@@ -31,18 +31,22 @@ logging.basicConfig(level=logging.DEBUG)
 
 async def update_repo(repo: Path, delivery: str, name: str):
     """Update a git repo at the given path."""
-    if not (repo / '.git').is_dir():
-        raise web.HTTPServerError(
-            reason=f'{delivery}: Checkout for {name} does not exist')
-
     log.info('%s: Running git pull for %s at %s', delivery, name, repo)
     proc = await asyncio.create_subprocess_exec('git', 'pull', cwd=repo)
+    await proc.wait()
+    if proc.returncode != 0:
+        log.error('%s: Running git pull for %s at %s failed: %d',
+                  delivery, name, repo, proc.returncode)
+
+
+def handle_update_repo_result(task: asyncio.Task):
+    """Clean up the git repo update tasks, logging an error if necessary."""
     try:
-        await asyncio.wait_for(proc.wait(), timeout=60)
-    except asyncio.TimeoutError:
-        proc.kill()
-        raise web.HTTPServerError(
-            reason=f'{delivery}: Timed out updating git checkout of {name}')
+        task.result()
+    except asyncio.CancelledError:
+        pass
+    except Exception:
+        log.exception('Exception raised by task %r', task)
 
 
 async def verify_signature(data: bytes, signature: bytes, repo: str,
@@ -137,7 +141,14 @@ async def github_webhook(request: web.Request):
         return web.Response(status=200)
 
     checkout = Path(os.environ.get('SITE_DIR', 'sites'), repository)
-    await update_repo(checkout, delivery, f'{organization}/{repository}')
+    if not (checkout / '.git').is_dir():
+        raise web.HTTPInternalServerError(
+            reason=(f'{delivery}: Checkout for {organization}/{repository} '
+                    'does not exist'))
+    task = asyncio.create_task(
+        update_repo(checkout, delivery, f'{organization}/{repository}'),
+        name=f'update_repo {repository}')
+    task.add_done_callback(handle_update_repo_result)
 
     return web.Response(status=200)
 
@@ -166,4 +177,11 @@ if __name__ == '__main__':
         host = 'localhost'
         port = 8080
     app = create_app()
-    web.run_app(app, host=host, port=port)
+    try:
+        web.run_app(app, host=host, port=port)
+    except KeyboardInterrupt:
+        # Finish up git update tasks.
+        git_update_tasks = {task for task in asyncio.all_tasks()
+                            if task.get_name().startswith('update_repo')}
+        asyncio.run_until_complete(
+            asyncio.gather(*git_update_tasks, return_exceptions=True))
