@@ -21,6 +21,7 @@
 		# https://docs.github.com/en/developers/webhooks-and-events/webhooks/webhook-events-and-payloads#delivery-headers
 		@valid_webhook {
 			method POST
+			header Content-Type application/json
 			header User-Agent GitHub-Hookshot/*
 			header X-GitHub-Event ping
 			header X-GitHub-Event push
