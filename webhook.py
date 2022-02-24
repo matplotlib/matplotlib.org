@@ -32,11 +32,25 @@ logging.basicConfig(level=logging.DEBUG)
 async def update_repo(repo: Path, delivery: str, name: str):
     """Update a git repo at the given path."""
     log.info('%s: Running git pull for %s at %s', delivery, name, repo)
-    proc = await asyncio.create_subprocess_exec('git', 'pull', cwd=repo)
+
+    proc = await asyncio.create_subprocess_exec('git', 'fetch', cwd=repo)
     await proc.wait()
     if proc.returncode != 0:
-        log.error('%s: Running git pull for %s at %s failed: %d',
+        log.error('%s: Running git fetch for %s at %s failed: %d',
                   delivery, name, repo, proc.returncode)
+        return False
+
+    # Updates must be done this way because we force push away previous
+    # gh-pages commits to keep the repository from ballooning in size.
+    proc = await asyncio.create_subprocess_exec(
+        'git', 'reset', '--hard', '@{upstream}', cwd=repo)
+    await proc.wait()
+    if proc.returncode != 0:
+        log.error('%s: Running git reset for %s at %s failed: %d',
+                  delivery, name, repo, proc.returncode)
+        return False
+
+    return True
 
 
 def handle_update_repo_result(task: asyncio.Task):
@@ -134,10 +148,12 @@ async def github_webhook(request: web.Request):
         log.info('%s: Ignoring webhook for unused event %s', delivery, event)
         return web.Response(status=200)
 
+    expected_branch = ('main' if repository == 'matplotlib.github.com'
+                       else 'gh-pages')
     ref = data.get('ref', '')
-    if ref != 'refs/heads/gh-pages':
-        log.info('%s: Ignoring push event on branch %s other than gh-pages',
-                 delivery, ref)
+    if ref != f'refs/heads/{expected_branch}':
+        log.info('%s: Ignoring push event on branch %s other than %s',
+                 delivery, ref, expected_branch)
         return web.Response(status=200)
 
     checkout = Path(os.environ.get('SITE_DIR', 'sites'), repository)

@@ -35,18 +35,11 @@ async def test_signature(monkeypatch):
         'unused')
 
 
-async def test_update_repo_empty(tmp_path_factory):
-    """Test that updating an empty repository works as expected."""
-    repo1 = tmp_path_factory.mktemp('repo1')
-    run_check(['git', 'init', '-b', 'main', repo1])
-    await update_repo(repo1, 'unused', 'matplotlib/repo1')
-
-
 async def test_update_repo(tmp_path_factory):
     """Test that updating a repository works as expected."""
     # Set up a source repository.
     src = tmp_path_factory.mktemp('src')
-    run_check(['git', 'init', '-b', 'main', src])
+    run_check(['git', 'init', '-b', 'gh-pages', src])
     (src / 'readme.txt').write_text('Test repo information')
     run_check(['git', 'add', 'readme.txt'], cwd=src)
     run_check(['git', 'commit', '-m', 'Initial commit'], cwd=src)
@@ -65,7 +58,7 @@ async def test_update_repo(tmp_path_factory):
         (line for line in src_stdout if line.split()[-1] == 'HEAD'), '')
 
     # Now this should correctly update the first repository.
-    await update_repo(dest, 'unused', 'matplotlib/dest')
+    assert await update_repo(dest, 'unused', 'matplotlib/dest')
     dest_stdout = run_check(['git', 'show-ref', '--head', 'HEAD'], cwd=dest,
                             capture_output=True).stdout.splitlines()
     dest_commit = next(
