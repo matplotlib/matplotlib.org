@@ -46,6 +46,7 @@
 
 	import subproject basemap
 	import subproject cheatsheets
+	import subproject cycler
 	import subproject governance
 	import subproject matplotblog
 	import subproject mpl-altair
