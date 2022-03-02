@@ -1,5 +1,5 @@
 RUNTIME ?= podman
-CADDY_IMAGE ?= caddy-mpl
+CADDY_IMAGE ?= docker.io/library/caddy
 CADDY_VERSION ?= 2.4.6
 
 serve:
@@ -11,12 +11,6 @@ serve:
 	    -p 2015:2015 \
 	    $(CADDY_IMAGE):$(CADDY_VERSION) \
 	    caddy run --config /etc/caddy/Caddyfile --watch
-
-image:
-	$(RUNTIME) build \
-	    --build-arg=CADDY_VERSION=$(CADDY_VERSION) \
-	    -t $(CADDY_IMAGE):$(CADDY_VERSION) \
-	    -f Containerfile
 
 fmt:
 	$(RUNTIME) run --rm -it \
