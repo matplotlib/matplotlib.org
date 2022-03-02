@@ -1,7 +1,6 @@
 """GitHub Documentation WebHook handler tests."""
 
 import functools
-from pathlib import Path
 import subprocess
 from unittest import mock
 
