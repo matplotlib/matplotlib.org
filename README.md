@@ -21,6 +21,7 @@ related projects are also exposed as toplevel directories:
 * [basemap](https://github.com/matplotlib/basemap)
 * [cheatsheets](https://github.com/matplotlib/cheatsheets)
 * [cycler](https://github.com/matplotlib/cycler)
+* [devdocs](https://github.com/matplotlib/devdocs)
 * [governance](https://github.com/matplotlib/governance)
 * [matplotblog](https://github.com/matplotlib/matplotblog)
 * [mpl-altair](https://github.com/matplotlib/mpl-altair)
