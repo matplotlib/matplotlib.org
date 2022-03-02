@@ -26,6 +26,7 @@ related projects are also exposed as toplevel directories:
 * [matplotblog](https://github.com/matplotlib/matplotblog)
 * [mpl-altair](https://github.com/matplotlib/mpl-altair)
 * [mpl-bench](https://github.com/matplotlib/mpl-bench)
+* [mpl-gui](https://github.com/matplotlib/mpl-gui)
 * [mpl-third-party](https://github.com/matplotlib/mpl-third-party)
 
 Caddy options

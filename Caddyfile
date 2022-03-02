@@ -52,6 +52,7 @@
 	import subproject matplotblog
 	import subproject mpl-altair
 	import subproject mpl-bench
+	import subproject mpl-gui
 	import subproject mpl-third-party
 
 	# Place the brochure site at the top level.
