@@ -1,0 +1,27 @@
+---
+
+name: Tests
+on: [push, pull_request]
+
+jobs:
+  webhook:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.9", "3.10"]
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Install Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install dependencies
+        run: |
+          pip install -r dev-requirements.txt
+          git config --global user.name "GitHub CI Bot"
+          git config --global user.email "noone@example.com"
+
+      - name: Run tests
+        run: pytest
