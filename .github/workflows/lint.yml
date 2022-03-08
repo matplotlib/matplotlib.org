@@ -56,10 +56,10 @@ jobs:
           echo "$HOME/bin" >> $GITHUB_PATH
 
       - name: Run caddy validate
-        run: caddy validate
+        run: caddy validate --config caddy/Caddyfile
 
       - name: Run caddy fmt
-        run: caddy fmt --overwrite
+        run: caddy fmt --overwrite caddy/Caddyfile
 
       - name: Run reviewdog
         uses: reviewdog/action-suggester@v1

@@ -19,9 +19,9 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install -r dev-requirements.txt
+          pip install -r webhook/dev-requirements.txt
           git config --global user.name "GitHub CI Bot"
           git config --global user.email "noone@example.com"
 
       - name: Run tests
-        run: pytest
+        run: pytest webhook
