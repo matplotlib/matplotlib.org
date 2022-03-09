@@ -1,6 +1,8 @@
 ---
 - hosts: website
   tasks:
+    # Installation tasks
+    # ##################
     - name: Enable copr
       ansible.builtin.dnf:
         name: "dnf-command(copr)"
@@ -34,3 +36,47 @@
           # Remove this when Loki is packaged.
           - podman
         state: present
+
+    # Caddy server setup
+    # ##################
+    - name: Configure Caddy
+      ansible.builtin.copy:
+        src: "{{playbook_dir}}/caddy/Caddyfile"
+        dest: /etc/caddy/Caddyfile
+      notify: Reload Caddy
+
+    - name: Configure Caddy system service
+      ansible.builtin.file:
+        path: /etc/systemd/system/caddy.service.d
+        state: directory
+        mode: 0755
+    - name: Configure Caddy system service
+      ansible.builtin.copy:
+        src: "{{playbook_dir}}/caddy/caddy.service.override"
+        dest: /etc/systemd/system/caddy.service.d/override.conf
+      notify:
+        - Reload systemd
+        - Restart Caddy
+
+    - name: Enable Caddy service
+      ansible.builtin.systemd:
+        name: caddy.service
+        enabled: true
+        state: started
+
+  # Handlers restart/reload services at playbook completion
+  # #######################################################
+  handlers:
+    - name: Reload systemd
+      ansible.builtin.systemd:
+        daemon_reload: true
+
+    - name: Reload Caddy
+      ansible.builtin.systemd:
+        name: caddy
+        state: reloaded
+
+    - name: Restart Caddy
+      ansible.builtin.systemd:
+        name: caddy
+        state: restarted
