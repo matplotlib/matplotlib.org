@@ -98,6 +98,38 @@
         enabled: true
         state: started
 
+    # Webhook setup
+    # #############
+    - name: Install webhook
+      ansible.builtin.copy:
+        src: "{{playbook_dir}}/webhook/webhook.py"
+        dest: /usr/bin/webhook.py
+        mode: 0755
+      notify: Restart webhook
+
+    - name: Configure webhook system service
+      ansible.builtin.copy:
+        src: "{{playbook_dir}}/webhook/webhook.service"
+        dest: /etc/systemd/system/webhook.service
+        mode: 0644
+      notify:
+        - Reload systemd
+        - Restart webhook
+
+    - name: Configure webhook secrets
+      ansible.builtin.copy:
+        content: "SITE_DIR=/usr/share/caddy"
+        dest: /etc/caddy/webhook.env
+        mode: 0644
+      notify:
+        - Restart webhook
+
+    - name: Enable webhook service
+      ansible.builtin.systemd:
+        name: webhook.service
+        enabled: true
+        state: started
+
   # Handlers restart/reload services at playbook completion
   # #######################################################
   handlers:
@@ -113,4 +145,9 @@
     - name: Restart Caddy
       ansible.builtin.systemd:
         name: caddy
+        state: restarted
+
+    - name: Restart webhook
+      ansible.builtin.systemd:
+        name: webhook
         state: restarted
