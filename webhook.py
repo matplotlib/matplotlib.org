@@ -156,7 +156,12 @@ async def github_webhook(request: web.Request):
                  delivery, ref, expected_branch)
         return web.Response(status=200)
 
-    checkout = Path(os.environ.get('SITE_DIR', 'sites'), repository)
+    site_dir = Path(os.environ.get('SITE_DIR', 'sites')).resolve()
+    checkout = (site_dir / repository).resolve()
+    if not checkout.is_relative_to(site_dir):
+        raise web.HTTPBadRequest(
+            reason=(f'{delivery}: Checkout for {organization}/{repository} '
+                    'does not exist'))
     if not (checkout / '.git').is_dir():
         raise web.HTTPInternalServerError(
             reason=(f'{delivery}: Checkout for {organization}/{repository} '

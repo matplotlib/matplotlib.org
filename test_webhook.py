@@ -121,6 +121,14 @@ async def test_github_webhook_errors(aiohttp_client, monkeypatch):
     assert resp.status == 400
     assert 'incorrect repository' in await resp.text()
 
+    # Fields provided, but invalid.
+    resp = await client.post(
+        '/gh/non-existent-repo', headers=valid_headers,
+        data='{"sender": {"login": "QuLogic"}, "repository":'
+             ' {"name": "..", "owner": {"login": "matplotlib"}}}')
+    assert resp.status == 400
+    assert 'incorrect repository' in await resp.text()
+
     # Problem on our side.
     resp = await client.post(
         '/gh/non-existent',
