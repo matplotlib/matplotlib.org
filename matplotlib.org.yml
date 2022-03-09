@@ -1,5 +1,19 @@
 ---
 - hosts: website
+  vars:
+    repos:
+      - mpl-brochure-site
+      - matplotlib.github.com
+      - basemap
+      - cheatsheets
+      - cycler
+      - devdocs
+      - governance
+      - matplotblog
+      - mpl-altair
+      - mpl-bench
+      - mpl-gui
+      - mpl-third-party
   tasks:
     # Installation tasks
     # ##################
@@ -36,6 +50,26 @@
           # Remove this when Loki is packaged.
           - podman
         state: present
+
+    # Prepare and clone Git repositories
+    # ##################################
+    - name: Create Git repository directories
+      ansible.builtin.file:
+        path: "/usr/share/caddy/{{ item }}"
+        state: directory
+        mode: 0755
+        owner: caddy
+        group: caddy
+      loop: "{{ repos }}"
+
+    - name: Clone Git repositories
+      become: true
+      become_user: caddy
+      ansible.builtin.git:
+        repo: "https://github.com/matplotlib/{{ item }}"
+        dest: "/usr/share/caddy/{{ item }}"
+        version: gh-pages
+      loop: "{{ repos }}"
 
     # Caddy server setup
     # ##################
