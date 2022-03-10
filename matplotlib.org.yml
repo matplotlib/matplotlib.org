@@ -162,6 +162,28 @@
         enabled: true
         state: started
 
+    # Monitoring setup
+    # ################
+    - name: Configure Prometheus
+      ansible.builtin.copy:
+        src: prometheus.yml
+        dest: /etc/prometheus/prometheus.yml
+        mode: 0644
+      notify:
+        - Restart Prometheus
+
+    - name: Enable prometheus node exporter service
+      ansible.builtin.systemd:
+        name: prometheus-node-exporter.service
+        enabled: true
+        state: started
+
+    - name: Enable prometheus service
+      ansible.builtin.systemd:
+        name: prometheus.service
+        enabled: true
+        state: started
+
   # Handlers restart/reload services at playbook completion
   # #######################################################
   handlers:
@@ -177,6 +199,11 @@
     - name: Restart Caddy
       ansible.builtin.systemd:
         name: caddy
+        state: restarted
+
+    - name: Restart Prometheus
+      ansible.builtin.systemd:
+        name: prometheus
         state: restarted
 
     - name: Restart webhook
