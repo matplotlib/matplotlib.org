@@ -6,7 +6,7 @@ serve:
 	mkdir -p sites
 	$(RUNTIME) run --rm -it \
 	    -v $$PWD/sites:/srv:Z \
-	    -v $$PWD/Caddyfile:/etc/caddy/Caddyfile:ro,Z \
+	    -v $$PWD/caddy/Caddyfile:/etc/caddy/Caddyfile:ro,Z \
 	    -e SITE_DIR=/srv \
 	    -p 2015:2015 \
 	    $(CADDY_IMAGE):$(CADDY_VERSION) \
@@ -14,6 +14,6 @@ serve:
 
 fmt:
 	$(RUNTIME) run --rm -it \
-	    -v $$PWD/Caddyfile:/etc/caddy/Caddyfile:Z \
+	    -v $$PWD/caddy/Caddyfile:/etc/caddy/Caddyfile:Z \
 	    $(CADDY_IMAGE):$(CADDY_VERSION) \
 	    caddy fmt --overwrite /etc/caddy/Caddyfile

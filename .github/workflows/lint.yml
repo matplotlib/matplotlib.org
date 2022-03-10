@@ -48,10 +48,10 @@ jobs:
         uses: reviewdog/action-setup@v1
 
       - name: Run caddy validate
-        run: caddy validate
+        run: caddy validate --config caddy/Caddyfile
 
       - name: Run caddy fmt
-        run: caddy fmt --overwrite
+        run: caddy fmt --overwrite caddy/Caddyfile
 
       - name: Run reviewdog
         uses: reviewdog/action-suggester@v1
