@@ -65,8 +65,9 @@ async def test_update_repo(tmp_path_factory):
     assert dest_commit == src_commit
 
 
-async def test_github_webhook_errors(aiohttp_client, monkeypatch):
+async def test_github_webhook_errors(aiohttp_client, monkeypatch, tmp_path):
     """Test invalid inputs to webhook."""
+    monkeypatch.setenv('SITE_DIR', str(tmp_path))
     client = await aiohttp_client(create_app())
 
     # Only /gh/<repo-name> exists.
@@ -142,12 +143,12 @@ async def test_github_webhook_errors(aiohttp_client, monkeypatch):
 
 async def test_github_webhook_valid(aiohttp_client, monkeypatch, tmp_path):
     """Test valid input to webhook."""
+    monkeypatch.setenv('SITE_DIR', str(tmp_path))
     client = await aiohttp_client(create_app())
 
     # Do no actual work, since that's tested above.
     monkeypatch.setattr(webhook, 'verify_signature',
                         mock.Mock(verify_signature, return_value=True))
-    monkeypatch.setenv('SITE_DIR', str(tmp_path))
     ur_mock = mock.Mock(update_repo, return_value=None)
     monkeypatch.setattr(webhook, 'update_repo', ur_mock)
 

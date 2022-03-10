@@ -156,9 +156,8 @@ async def github_webhook(request: web.Request):
                  delivery, ref, expected_branch)
         return web.Response(status=200)
 
-    site_dir = Path(os.environ.get('SITE_DIR', 'sites')).resolve()
-    checkout = (site_dir / repository).resolve()
-    if not checkout.is_relative_to(site_dir):
+    checkout = (request.app['site_dir'] / repository).resolve()
+    if not checkout.is_relative_to(request.app['site_dir']):
         raise web.HTTPBadRequest(
             reason=(f'{delivery}: Checkout for {organization}/{repository} '
                     'does not exist'))
@@ -176,7 +175,11 @@ async def github_webhook(request: web.Request):
 
 def create_app():
     """Create the aiohttp app and setup routes."""
+    site_dir = Path(os.environ.get('SITE_DIR', 'sites')).resolve()
+    assert site_dir.is_dir()
+
     app = web.Application()
+    app['site_dir'] = site_dir
     app.add_routes([
         web.post('/gh/{repo}', github_webhook),
     ])
@@ -184,8 +187,6 @@ def create_app():
 
 
 if __name__ == '__main__':
-    assert Path(os.environ.get('SITE_DIR', 'sites')).is_dir()
-
     if len(sys.argv) > 1:
         from urllib.parse import urlparse
         url = sys.argv[1]
