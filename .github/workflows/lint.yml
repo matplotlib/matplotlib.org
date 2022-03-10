@@ -17,12 +17,7 @@ jobs:
         run: pip3 install flake8
 
       - name: Set up reviewdog
-        run: |
-          mkdir -p "$HOME/bin"
-          curl -sfL \
-            https://github.com/reviewdog/reviewdog/raw/master/install.sh | \
-              sh -s -- -b "$HOME/bin"
-          echo "$HOME/bin" >> $GITHUB_PATH
+        uses: reviewdog/action-setup@v1
 
       - name: Run flake8
         env:
@@ -50,12 +45,7 @@ jobs:
           sudo apt install caddy
 
       - name: Set up reviewdog
-        run: |
-          mkdir -p "$HOME/bin"
-          curl -sfL \
-            https://github.com/reviewdog/reviewdog/raw/master/install.sh | \
-              sh -s -- -b "$HOME/bin"
-          echo "$HOME/bin" >> $GITHUB_PATH
+        uses: reviewdog/action-setup@v1
 
       - name: Run caddy validate
         run: caddy validate
