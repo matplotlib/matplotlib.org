@@ -6,10 +6,10 @@ jobs:
     name: flake8
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - name: Set up Python 3
-        uses: actions/setup-python@v1
+        uses: actions/setup-python@v3
 
       - name: Install flake8
         run: pip3 install flake8
@@ -35,7 +35,7 @@ jobs:
     name: caddyfmt
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - name: Install caddy
         run: |
