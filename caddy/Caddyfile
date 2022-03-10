@@ -55,6 +55,9 @@
 	import subproject mpl-gui
 	import subproject mpl-third-party
 
+	# redirect the objects.inv
+	redir /objects.inv /stable/objects.inv permanent
+
 	# Place the brochure site at the top level.
 	import subproject mpl-brochure-site
 	@brochure file {
