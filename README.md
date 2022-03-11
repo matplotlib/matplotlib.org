@@ -56,8 +56,8 @@ prerequisites:
 * Create a DigitalOcean API token, and pass it to the inventory generator by
   setting the `DO_API_TOKEN` environment variable.
 * Set the vault decryption password of the ansible vaulted file with our
-  secrets. This may be done by setting the `VAULT_PASSWORD` environment
-  variable.
+  secrets. This may be done by setting the `ANSIBLE_VAULT_PASSWORD_FILE`
+  environment variable to point to a file containing the password.
 * Download all the collections the playbooks depend on with the following
   command:
   ```

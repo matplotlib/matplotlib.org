@@ -14,6 +14,8 @@
       - mpl-bench
       - mpl-gui
       - mpl-third-party
+  vars_files:
+    - files/webhook_vars.yml
   tasks:
     # Installation tasks
     # ##################
@@ -149,8 +151,8 @@
         - Restart webhook
 
     - name: Configure webhook secrets
-      ansible.builtin.copy:
-        content: "SITE_DIR=/usr/share/caddy"
+      ansible.builtin.template:
+        src: webhook.env.j2
         dest: /etc/caddy/webhook.env
         mode: 0644
       notify:
