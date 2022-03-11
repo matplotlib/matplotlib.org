@@ -14,6 +14,11 @@
 
 # Set this variable in the environment when running in production.
 {$SITE_ADDRESS::2015} {
+	# Set the variable in the environment to the Caddy directive for tls
+	# support. By default, this is empty so you can test it locally, but
+	# the Ansible config sets it up with the right certificate paths.
+	{$TLS_CONFIG:}
+
 	root * {$SITE_DIR:.}
 
 	# Setup a webhook

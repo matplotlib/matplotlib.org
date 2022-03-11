@@ -1,3 +1,4 @@
 [Service]
 Environment="SITE_DIR=/usr/share/caddy"
 Environment="SITE_ADDRESS=https://do.matplotlib.org, https://matplotlib.org"
+Environment="TLS_CONFIG=tls /etc/caddy/tls/cert.pem /etc/caddy/tls/privkey.pem"

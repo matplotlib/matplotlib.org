@@ -126,6 +126,32 @@
         - Reload systemd
         - Restart Caddy
 
+    - name: Configure Caddy TLS certificate directory
+      ansible.builtin.file:
+        path: /etc/caddy/tls
+        state: directory
+        mode: 0755
+        owner: caddy
+        group: caddy
+    - name: Configure Caddy TLS certificates
+      ansible.builtin.copy:
+        src: tls-cert.pem
+        dest: /etc/caddy/tls/cert.pem
+        mode: 0640
+        owner: caddy
+        group: caddy
+      notify:
+        - Reload Caddy
+    - name: Configure Caddy TLS certificates
+      ansible.builtin.copy:
+        src: tls-privkey.pem
+        dest: /etc/caddy/tls/privkey.pem
+        mode: 0640
+        owner: caddy
+        group: caddy
+      notify:
+        - Reload Caddy
+
     - name: Enable Caddy service
       ansible.builtin.systemd:
         name: caddy.service
@@ -193,15 +219,15 @@
       ansible.builtin.systemd:
         daemon_reload: true
 
-    - name: Reload Caddy
-      ansible.builtin.systemd:
-        name: caddy
-        state: reloaded
-
     - name: Restart Caddy
       ansible.builtin.systemd:
         name: caddy
         state: restarted
+
+    - name: Reload Caddy
+      ansible.builtin.systemd:
+        name: caddy
+        state: reloaded
 
     - name: Restart Prometheus
       ansible.builtin.systemd:
