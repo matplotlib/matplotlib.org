@@ -19,198 +19,216 @@
   tasks:
     # Installation tasks
     # ##################
-    - name: Enable copr
-      ansible.builtin.dnf:
-        name: "dnf-command(copr)"
-        state: present
-    - name: Enable caddy copr
-      community.general.copr:
-        name: "@caddy/caddy"
-        state: enabled
+    - name: Install system requirements
+      tags: packages
+      block:
+        - name: Enable copr
+          ansible.builtin.dnf:
+            name: "dnf-command(copr)"
+            state: present
+        - name: Enable caddy copr
+          community.general.copr:
+            name: "@caddy/caddy"
+            state: enabled
 
-    - name: Install server maintenance
-      ansible.builtin.dnf:
-        name: "fail2ban"
-        state: present
+        - name: Install server maintenance
+          ansible.builtin.dnf:
+            name: "fail2ban"
+            state: present
 
-    - name: Install web server requirements
-      ansible.builtin.dnf:
-        name:
-          - caddy
-          - git
-          - mailcap
-          - python3-aiohttp
-        state: present
+        - name: Install web server requirements
+          ansible.builtin.dnf:
+            name:
+              - caddy
+              - git
+              - mailcap
+              - python3-aiohttp
+            state: present
 
-    - name: Install server monitoring tools
-      ansible.builtin.dnf:
-        name:
-          - golang-github-prometheus
-          - golang-github-prometheus-alertmanager
-          - golang-github-prometheus-node-exporter
-          - grafana
-          # Remove this when Loki is packaged.
-          - podman
-        state: present
+        - name: Install server monitoring tools
+          ansible.builtin.dnf:
+            name:
+              - golang-github-prometheus
+              - golang-github-prometheus-alertmanager
+              - golang-github-prometheus-node-exporter
+              - grafana
+              # Remove this when Loki is packaged.
+              - podman
+            state: present
 
     # Firewall setup
     # ##############
-    - name: Enable firewall
-      ansible.builtin.systemd:
-        name: firewalld.service
-        enabled: true
-        state: started
+    - name: Setup firewall
+      tags: firewal
+      block:
+        - name: Enable firewall
+          ansible.builtin.systemd:
+            name: firewalld.service
+            enabled: true
+            state: started
 
-    - name: Allow SSH on firewall
-      ansible.posix.firewalld:
-        service: ssh
-        permanent: true
-        immediate: true
-        offline: true
-        state: enabled
+        - name: Allow SSH on firewall
+          ansible.posix.firewalld:
+            service: ssh
+            permanent: true
+            immediate: true
+            offline: true
+            state: enabled
 
-    - name: Allow HTTP on firewall
-      ansible.posix.firewalld:
-        service: http
-        permanent: true
-        immediate: true
-        offline: true
-        state: enabled
+        - name: Allow HTTP on firewall
+          ansible.posix.firewalld:
+            service: http
+            permanent: true
+            immediate: true
+            offline: true
+            state: enabled
 
-    - name: Allow HTTPS on firewall
-      ansible.posix.firewalld:
-        service: https
-        permanent: true
-        immediate: true
-        offline: true
-        state: enabled
+        - name: Allow HTTPS on firewall
+          ansible.posix.firewalld:
+            service: https
+            permanent: true
+            immediate: true
+            offline: true
+            state: enabled
 
     # Prepare and clone Git repositories
     # ##################################
-    - name: Create Git repository directories
-      ansible.builtin.file:
-        path: "/usr/share/caddy/{{ item }}"
-        state: directory
-        mode: 0755
-        owner: caddy
-        group: caddy
-      loop: "{{ repos }}"
+    - name: Setup Git repositories
+      tags: git
+      block:
+        - name: Create Git repository directories
+          ansible.builtin.file:
+            path: "/usr/share/caddy/{{ item }}"
+            state: directory
+            mode: 0755
+            owner: caddy
+            group: caddy
+          loop: "{{ repos }}"
 
-    - name: Clone Git repositories
-      become: true
-      become_user: caddy
-      ansible.builtin.git:
-        repo: "https://github.com/matplotlib/{{ item }}"
-        dest: "/usr/share/caddy/{{ item }}"
-        version: gh-pages
-      loop: "{{ repos }}"
+        - name: Clone Git repositories
+          become: true
+          become_user: caddy
+          ansible.builtin.git:
+            repo: "https://github.com/matplotlib/{{ item }}"
+            dest: "/usr/share/caddy/{{ item }}"
+            version: gh-pages
+          loop: "{{ repos }}"
 
     # Caddy server setup
     # ##################
-    - name: Configure Caddy
-      ansible.builtin.copy:
-        src: "{{playbook_dir}}/caddy/Caddyfile"
-        dest: /etc/caddy/Caddyfile
-      notify: Reload Caddy
+    - name: Caddy setup
+      tags: caddy
+      block:
+        - name: Configure Caddy
+          ansible.builtin.copy:
+            src: "{{playbook_dir}}/caddy/Caddyfile"
+            dest: /etc/caddy/Caddyfile
+          notify: Reload Caddy
 
-    - name: Configure Caddy system service
-      ansible.builtin.file:
-        path: /etc/systemd/system/caddy.service.d
-        state: directory
-        mode: 0755
-    - name: Configure Caddy system service
-      ansible.builtin.copy:
-        src: "{{playbook_dir}}/caddy/caddy.service.override"
-        dest: /etc/systemd/system/caddy.service.d/override.conf
-      notify:
-        - Reload systemd
-        - Restart Caddy
+        - name: Configure Caddy system service
+          ansible.builtin.file:
+            path: /etc/systemd/system/caddy.service.d
+            state: directory
+            mode: 0755
+        - name: Configure Caddy system service
+          ansible.builtin.copy:
+            src: "{{playbook_dir}}/caddy/caddy.service.override"
+            dest: /etc/systemd/system/caddy.service.d/override.conf
+          notify:
+            - Reload systemd
+            - Restart Caddy
 
-    - name: Configure Caddy TLS certificate directory
-      ansible.builtin.file:
-        path: /etc/caddy/tls
-        state: directory
-        mode: 0755
-        owner: caddy
-        group: caddy
-    - name: Configure Caddy TLS certificates
-      ansible.builtin.copy:
-        src: tls-cert.pem
-        dest: /etc/caddy/tls/cert.pem
-        mode: 0640
-        owner: caddy
-        group: caddy
-      notify:
-        - Reload Caddy
-    - name: Configure Caddy TLS certificates
-      ansible.builtin.copy:
-        src: tls-privkey.pem
-        dest: /etc/caddy/tls/privkey.pem
-        mode: 0640
-        owner: caddy
-        group: caddy
-      notify:
-        - Reload Caddy
+        - name: Configure Caddy TLS certificate directory
+          ansible.builtin.file:
+            path: /etc/caddy/tls
+            state: directory
+            mode: 0755
+            owner: caddy
+            group: caddy
+        - name: Configure Caddy TLS certificates
+          ansible.builtin.copy:
+            src: tls-cert.pem
+            dest: /etc/caddy/tls/cert.pem
+            mode: 0640
+            owner: caddy
+            group: caddy
+          notify:
+            - Reload Caddy
+        - name: Configure Caddy TLS certificates
+          ansible.builtin.copy:
+            src: tls-privkey.pem
+            dest: /etc/caddy/tls/privkey.pem
+            mode: 0640
+            owner: caddy
+            group: caddy
+          notify:
+            - Reload Caddy
 
-    - name: Enable Caddy service
-      ansible.builtin.systemd:
-        name: caddy.service
-        enabled: true
-        state: started
+        - name: Enable Caddy service
+          ansible.builtin.systemd:
+            name: caddy.service
+            enabled: true
+            state: started
 
     # Webhook setup
     # #############
-    - name: Install webhook
-      ansible.builtin.copy:
-        src: "{{playbook_dir}}/webhook/webhook.py"
-        dest: /usr/bin/webhook.py
-        mode: 0755
-      notify: Restart webhook
+    - name: Webhook setup
+      tags: webhook
+      block:
+        - name: Install webhook
+          ansible.builtin.copy:
+            src: "{{playbook_dir}}/webhook/webhook.py"
+            dest: /usr/bin/webhook.py
+            mode: 0755
+          notify: Restart webhook
 
-    - name: Configure webhook system service
-      ansible.builtin.copy:
-        src: "{{playbook_dir}}/webhook/webhook.service"
-        dest: /etc/systemd/system/webhook.service
-        mode: 0644
-      notify:
-        - Reload systemd
-        - Restart webhook
+        - name: Configure webhook system service
+          ansible.builtin.copy:
+            src: "{{playbook_dir}}/webhook/webhook.service"
+            dest: /etc/systemd/system/webhook.service
+            mode: 0644
+          notify:
+            - Reload systemd
+            - Restart webhook
 
-    - name: Configure webhook secrets
-      ansible.builtin.template:
-        src: webhook.env.j2
-        dest: /etc/caddy/webhook.env
-        mode: 0644
-      notify:
-        - Restart webhook
+        - name: Configure webhook secrets
+          ansible.builtin.template:
+            src: webhook.env.j2
+            dest: /etc/caddy/webhook.env
+            mode: 0644
+          notify:
+            - Restart webhook
 
-    - name: Enable webhook service
-      ansible.builtin.systemd:
-        name: webhook.service
-        enabled: true
-        state: started
+        - name: Enable webhook service
+          ansible.builtin.systemd:
+            name: webhook.service
+            enabled: true
+            state: started
 
     # Monitoring setup
     # ################
-    - name: Configure Prometheus
-      ansible.builtin.copy:
-        src: prometheus.yml
-        dest: /etc/prometheus/prometheus.yml
-        mode: 0644
-      notify:
-        - Restart Prometheus
+    - name: Monitoring
+      tags: monitoring
+      block:
+        - name: Configure Prometheus
+          ansible.builtin.copy:
+            src: prometheus.yml
+            dest: /etc/prometheus/prometheus.yml
+            mode: 0644
+          notify:
+            - Restart Prometheus
 
-    - name: Enable prometheus node exporter service
-      ansible.builtin.systemd:
-        name: prometheus-node-exporter.service
-        enabled: true
-        state: started
+        - name: Enable prometheus node exporter service
+          ansible.builtin.systemd:
+            name: prometheus-node-exporter.service
+            enabled: true
+            state: started
 
-    - name: Enable prometheus service
-      ansible.builtin.systemd:
-        name: prometheus.service
-        enabled: true
-        state: started
+        - name: Enable prometheus service
+          ansible.builtin.systemd:
+            name: prometheus.service
+            enabled: true
+            state: started
 
   # Handlers restart/reload services at playbook completion
   # #######################################################
