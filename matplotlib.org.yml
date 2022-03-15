@@ -230,6 +230,46 @@
             enabled: true
             state: started
 
+        - name: Configure Grafana Prometheus data source
+          ansible.builtin.copy:
+            src: grafana/prometheus.yml
+            dest: /etc/grafana/provisioning/datasources/prometheus.yml
+            mode: 0640
+            group: grafana
+          notify: Restart Grafana
+
+        - name: Configure Grafana dashboard provisioning
+          ansible.builtin.copy:
+            src: grafana/dashboards.yml
+            dest: /etc/grafana/provisioning/dashboards/dashboards.yml
+            mode: 0640
+            group: grafana
+          notify: Restart Grafana
+
+        - name: Add Grafana dashboard directory
+          ansible.builtin.file:
+            path: /var/lib/grafana/dashboards
+            state: directory
+            mode: 0750
+            group: grafana
+
+        - name: Add Grafana dashboards
+          ansible.builtin.copy:
+            src: "grafana/{{ item }}.json"
+            dest: "/var/lib/grafana/dashboards/{{ item }}.json"
+            mode: 0640
+            group: grafana
+          loop:
+            - caddy
+            - go-metrics
+            - node-statistics
+
+        - name: Enable grafana service
+          ansible.builtin.systemd:
+            name: grafana-server.service
+            enabled: true
+            state: started
+
   # Handlers restart/reload services at playbook completion
   # #######################################################
   handlers:
@@ -250,6 +290,11 @@
     - name: Restart Prometheus
       ansible.builtin.systemd:
         name: prometheus
+        state: restarted
+
+    - name: Restart Grafana
+      ansible.builtin.systemd:
+        name: grafana-server
         state: restarted
 
     - name: Restart webhook
