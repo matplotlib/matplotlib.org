@@ -91,6 +91,31 @@
             offline: true
             state: enabled
 
+    # fail2ban setup
+    # ##############
+    - name: Setup fail2ban
+      tags: fail2ban
+      block:
+        - name: Configure fail2ban
+          ansible.builtin.copy:
+            src: fail2ban/jail.local
+            dest: /etc/fail2ban/jail.local
+          notify:
+            - Restart fail2ban
+
+        - name: Configure SSH fail2ban
+          ansible.builtin.template:
+            src: fail2ban/sshd.local.j2
+            dest: /etc/fail2ban/jail.d/sshd.local
+          notify:
+            - Restart fail2ban
+
+        - name: Enable fail2ban service
+          ansible.builtin.systemd:
+            name: fail2ban.service
+            enabled: true
+            state: started
+
     # Prepare and clone Git repositories
     # ##################################
     - name: Setup Git repositories
@@ -276,6 +301,11 @@
     - name: Reload systemd
       ansible.builtin.systemd:
         daemon_reload: true
+
+    - name: Restart fail2ban
+      ansible.builtin.systemd:
+        name: fail2ban
+        state: restarted
 
     - name: Restart Caddy
       ansible.builtin.systemd:
