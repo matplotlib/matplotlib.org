@@ -1,0 +1,7 @@
+# Drop-in config for SSH that disables things we don't want.
+
+# Already off by DO initial setup, but be explicit.
+PasswordAuthentication no
+
+# Enabled by 50-redhat.conf, but we don't have any X programs.
+X11Forwarding no

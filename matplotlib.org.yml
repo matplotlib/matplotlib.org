@@ -59,7 +59,7 @@
     # Firewall setup
     # ##############
     - name: Setup firewall
-      tags: firewal
+      tags: firewall
       block:
         - name: Enable firewall
           ansible.builtin.systemd:
@@ -68,6 +68,7 @@
             state: started
 
         - name: Allow SSH on firewall
+          tags: ssh
           ansible.posix.firewalld:
             service: ssh
             permanent: true
@@ -90,6 +91,14 @@
             immediate: true
             offline: true
             state: enabled
+
+    # SSH configuration
+    # #################
+    - name: Configure SSH
+      tags: ssh
+      ansible.builtin.copy:
+        src: sshd_config
+        dest: /etc/ssh/sshd_config.d/99-matplotlib.conf
 
     # fail2ban setup
     # ##############
