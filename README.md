@@ -40,3 +40,37 @@ overrides in environment variables:
   interfaces)
 * The directory containing the git repositories with `SITE_DIR` (defaults to
   `sites` in the current directory)
+
+Ansible configuration
+=====================
+
+When running on DigitalOcean hosting, an Ansible playbook is used to configure
+the server with consistent settings.
+
+Setup
+-----
+
+Before you can run our ansible playbooks, you need to meet the following
+prerequisites:
+
+* Create a DigitalOcean API token, and pass it to the inventory generator by
+  setting the `DO_API_TOKEN` environment variable.
+* Set the vault decryption password of the ansible vaulted file with our
+  secrets. This may be done by setting the `ANSIBLE_VAULT_PASSWORD_FILE`
+  environment variable to point to a file containing the password.
+* Download all the collections the playbooks depend on with the following
+  command:
+  ```
+  ansible-galaxy collection install \
+    --requirements-file collections/requirements.yml
+  ```
+
+You may wish to use [direnv](https://direnv.net/) to set environment variables.
+
+Running
+-------
+
+There is currently only one playbook:
+
+* `matplotlib.org.yml`, for the main matplotlib.org hosting. This playbook
+  operates on droplets with the `website` tag in DigitalOcean.

@@ -1,0 +1,342 @@
+---
+- hosts: website
+  vars:
+    repos:
+      - mpl-brochure-site
+      - matplotlib.github.com
+      - basemap
+      - cheatsheets
+      - cycler
+      - devdocs
+      - governance
+      - matplotblog
+      - mpl-altair
+      - mpl-bench
+      - mpl-gui
+      - mpl-third-party
+  vars_files:
+    - files/webhook_vars.yml
+  tasks:
+    # Installation tasks
+    # ##################
+    - name: Install system requirements
+      tags: packages
+      block:
+        - name: Enable copr
+          ansible.builtin.dnf:
+            name: "dnf-command(copr)"
+            state: present
+        - name: Enable caddy copr
+          community.general.copr:
+            name: "@caddy/caddy"
+            state: enabled
+
+        - name: Install server maintenance
+          ansible.builtin.dnf:
+            name: "fail2ban"
+            state: present
+
+        - name: Install web server requirements
+          ansible.builtin.dnf:
+            name:
+              - caddy
+              - git
+              - mailcap
+              - python3-aiohttp
+            state: present
+
+        - name: Install server monitoring tools
+          ansible.builtin.dnf:
+            name:
+              - golang-github-prometheus
+              - golang-github-prometheus-alertmanager
+              - golang-github-prometheus-node-exporter
+              - grafana
+              # Remove this when Loki is packaged.
+              - podman
+            state: present
+
+    # Firewall setup
+    # ##############
+    - name: Setup firewall
+      tags: firewall
+      block:
+        - name: Enable firewall
+          ansible.builtin.systemd:
+            name: firewalld.service
+            enabled: true
+            state: started
+
+        - name: Allow SSH on firewall
+          tags: ssh
+          ansible.posix.firewalld:
+            service: ssh
+            permanent: true
+            immediate: true
+            offline: true
+            state: enabled
+
+        - name: Allow HTTP on firewall
+          ansible.posix.firewalld:
+            service: http
+            permanent: true
+            immediate: true
+            offline: true
+            state: enabled
+
+        - name: Allow HTTPS on firewall
+          ansible.posix.firewalld:
+            service: https
+            permanent: true
+            immediate: true
+            offline: true
+            state: enabled
+
+    # SSH configuration
+    # #################
+    - name: Configure SSH
+      tags: ssh
+      ansible.builtin.copy:
+        src: sshd_config
+        dest: /etc/ssh/sshd_config.d/99-matplotlib.conf
+
+    # fail2ban setup
+    # ##############
+    - name: Setup fail2ban
+      tags: fail2ban
+      block:
+        - name: Configure fail2ban
+          ansible.builtin.copy:
+            src: fail2ban/jail.local
+            dest: /etc/fail2ban/jail.local
+          notify:
+            - Restart fail2ban
+
+        - name: Configure SSH fail2ban
+          ansible.builtin.template:
+            src: fail2ban/sshd.local.j2
+            dest: /etc/fail2ban/jail.d/sshd.local
+          notify:
+            - Restart fail2ban
+
+        - name: Enable fail2ban service
+          ansible.builtin.systemd:
+            name: fail2ban.service
+            enabled: true
+            state: started
+
+    # Prepare and clone Git repositories
+    # ##################################
+    - name: Setup Git repositories
+      tags: git
+      block:
+        - name: Create Git repository directories
+          ansible.builtin.file:
+            path: "/usr/share/caddy/{{ item }}"
+            state: directory
+            mode: 0755
+            owner: caddy
+            group: caddy
+          loop: "{{ repos }}"
+
+        - name: Clone Git repositories
+          become: true
+          become_user: caddy
+          ansible.builtin.git:
+            repo: "https://github.com/matplotlib/{{ item }}"
+            dest: "/usr/share/caddy/{{ item }}"
+            version: gh-pages
+          loop: "{{ repos }}"
+
+    # Caddy server setup
+    # ##################
+    - name: Caddy setup
+      tags: caddy
+      block:
+        - name: Configure Caddy
+          ansible.builtin.copy:
+            src: "{{playbook_dir}}/caddy/Caddyfile"
+            dest: /etc/caddy/Caddyfile
+          notify: Reload Caddy
+
+        - name: Configure Caddy system service
+          ansible.builtin.file:
+            path: /etc/systemd/system/caddy.service.d
+            state: directory
+            mode: 0755
+        - name: Configure Caddy system service
+          ansible.builtin.copy:
+            src: "{{playbook_dir}}/caddy/caddy.service.override"
+            dest: /etc/systemd/system/caddy.service.d/override.conf
+          notify:
+            - Reload systemd
+            - Restart Caddy
+
+        - name: Configure Caddy TLS certificate directory
+          ansible.builtin.file:
+            path: /etc/caddy/tls
+            state: directory
+            mode: 0755
+            owner: caddy
+            group: caddy
+        - name: Configure Caddy TLS certificates
+          ansible.builtin.copy:
+            src: tls-cert.pem
+            dest: /etc/caddy/tls/cert.pem
+            mode: 0640
+            owner: caddy
+            group: caddy
+          notify:
+            - Reload Caddy
+        - name: Configure Caddy TLS certificates
+          ansible.builtin.copy:
+            src: tls-privkey.pem
+            dest: /etc/caddy/tls/privkey.pem
+            mode: 0640
+            owner: caddy
+            group: caddy
+          notify:
+            - Reload Caddy
+
+        - name: Enable Caddy service
+          ansible.builtin.systemd:
+            name: caddy.service
+            enabled: true
+            state: started
+
+    # Webhook setup
+    # #############
+    - name: Webhook setup
+      tags: webhook
+      block:
+        - name: Install webhook
+          ansible.builtin.copy:
+            src: "{{playbook_dir}}/webhook/webhook.py"
+            dest: /usr/bin/webhook.py
+            mode: 0755
+          notify: Restart webhook
+
+        - name: Configure webhook system service
+          ansible.builtin.copy:
+            src: "{{playbook_dir}}/webhook/webhook.service"
+            dest: /etc/systemd/system/webhook.service
+            mode: 0644
+          notify:
+            - Reload systemd
+            - Restart webhook
+
+        - name: Configure webhook secrets
+          ansible.builtin.template:
+            src: webhook.env.j2
+            dest: /etc/caddy/webhook.env
+            mode: 0644
+          notify:
+            - Restart webhook
+
+        - name: Enable webhook service
+          ansible.builtin.systemd:
+            name: webhook.service
+            enabled: true
+            state: started
+
+    # Monitoring setup
+    # ################
+    - name: Monitoring
+      tags: monitoring
+      block:
+        - name: Configure Prometheus
+          ansible.builtin.copy:
+            src: prometheus.yml
+            dest: /etc/prometheus/prometheus.yml
+            mode: 0644
+          notify:
+            - Restart Prometheus
+
+        - name: Enable prometheus node exporter service
+          ansible.builtin.systemd:
+            name: prometheus-node-exporter.service
+            enabled: true
+            state: started
+
+        - name: Enable prometheus service
+          ansible.builtin.systemd:
+            name: prometheus.service
+            enabled: true
+            state: started
+
+        - name: Configure Grafana Prometheus data source
+          ansible.builtin.copy:
+            src: grafana/prometheus.yml
+            dest: /etc/grafana/provisioning/datasources/prometheus.yml
+            mode: 0640
+            group: grafana
+          notify: Restart Grafana
+
+        - name: Configure Grafana dashboard provisioning
+          ansible.builtin.copy:
+            src: grafana/dashboards.yml
+            dest: /etc/grafana/provisioning/dashboards/dashboards.yml
+            mode: 0640
+            group: grafana
+          notify: Restart Grafana
+
+        - name: Add Grafana dashboard directory
+          ansible.builtin.file:
+            path: /var/lib/grafana/dashboards
+            state: directory
+            mode: 0750
+            group: grafana
+
+        - name: Add Grafana dashboards
+          ansible.builtin.copy:
+            src: "grafana/{{ item }}.json"
+            dest: "/var/lib/grafana/dashboards/{{ item }}.json"
+            mode: 0640
+            group: grafana
+          loop:
+            - caddy
+            - go-metrics
+            - node-statistics
+
+        - name: Enable grafana service
+          ansible.builtin.systemd:
+            name: grafana-server.service
+            enabled: true
+            state: started
+
+  # Handlers restart/reload services at playbook completion
+  # #######################################################
+  handlers:
+    - name: Reload systemd
+      ansible.builtin.systemd:
+        daemon_reload: true
+
+    - name: Restart fail2ban
+      ansible.builtin.systemd:
+        name: fail2ban
+        state: restarted
+
+    - name: Restart Caddy
+      ansible.builtin.systemd:
+        name: caddy
+        state: restarted
+
+    - name: Reload Caddy
+      ansible.builtin.systemd:
+        name: caddy
+        state: reloaded
+
+    - name: Restart Prometheus
+      ansible.builtin.systemd:
+        name: prometheus
+        state: restarted
+
+    - name: Restart Grafana
+      ansible.builtin.systemd:
+        name: grafana-server
+        state: restarted
+
+    - name: Restart webhook
+      ansible.builtin.systemd:
+        name: webhook
+        state: restarted
