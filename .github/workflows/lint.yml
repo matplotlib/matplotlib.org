@@ -28,37 +28,6 @@ jobs:
             reviewdog -f=pep8 -name=flake8 \
               -tee -reporter=github-check -filter-mode nofilter
 
-  caddyfmt:
-    name: caddyfmt
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-
-      - name: Install caddy
-        run: |
-          sudo apt install -y debian-keyring debian-archive-keyring apt-transport-https
-          curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key' | \
-            sudo tee /etc/apt/trusted.gpg.d/caddy-stable.asc
-          curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/debian.deb.txt' | \
-            sudo tee /etc/apt/sources.list.d/caddy-stable.list
-          sudo apt update
-          sudo apt install caddy
-
-      - name: Set up reviewdog
-        uses: reviewdog/action-setup@v1
-
-      - name: Run caddy validate
-        run: caddy validate --config caddy/Caddyfile
-
-      - name: Run caddy fmt
-        run: caddy fmt --overwrite caddy/Caddyfile
-
-      - name: Run reviewdog
-        uses: reviewdog/action-suggester@v1
-        with:
-          fail_on_error: true
-          tool_name: 'caddy fmt'
-
   ansible:
     name: Ansible Lint
     runs-on: ubuntu-latest

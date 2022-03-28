@@ -6,20 +6,18 @@
 	redir /{args.0} /{args.0}/ permanent
 
 	handle_path /{args.0}/* {
-		root * {$SITE_DIR:sites}/{args.0}
+		root * {{ caddy.site_dir }}/{args.0}
 		try_files {path}.html {path}
 		file_server
 	}
 }
 
-# Set this variable in the environment when running in production.
-{$SITE_ADDRESS::2015} {
-	# Set the variable in the environment to the Caddy directive for tls
-	# support. By default, this is empty so you can test it locally, but
-	# the Ansible config sets it up with the right certificate paths.
-	{$TLS_CONFIG:}
+{{ caddy.address }} {
+{% if caddy.tls_config is defined %}
+	{{ caddy.tls_config }}
+{% endif %}
 
-	root * {$SITE_DIR:.}
+	root * {{ caddy.site_dir }}
 
 	# Setup a webhook
 	handle /gh/* {
@@ -49,24 +47,16 @@
 		}
 	}
 
-	import subproject basemap
-	import subproject cheatsheets
-	import subproject cycler
-	import subproject devdocs
-	import subproject governance
-	import subproject matplotblog
-	import subproject mpl-altair
-	import subproject mpl-bench
-	import subproject mpl-gui
-	import subproject mpl-third-party
+{% for site in repos %}
+	import subproject {{ site }}
+{% endfor %}
 
 	# redirect the objects.inv
 	redir /objects.inv /stable/objects.inv permanent
 
 	# Place the brochure site at the top level.
-	import subproject mpl-brochure-site
 	@brochure file {
-		root {$SITE_DIR:sites}/mpl-brochure-site
+		root {{ caddy.site_dir }}/mpl-brochure-site
 		try_files {path}.html {path}
 	}
 	rewrite / /mpl-brochure-site/index.html
@@ -74,7 +64,7 @@
 
 	# Finally try any of the versioned docs.
 	handle {
-		root * {$SITE_DIR:sites}/matplotlib.github.com
+		root * {{ caddy.site_dir }}/matplotlib.github.com
 		try_files {path}.html {path}
 		file_server
 	}
@@ -82,7 +72,7 @@
 	# Use a custom 404 error page.
 	handle_errors {
 		@notfound expression {http.error.status_code} == 404
-		root * {$SITE_DIR:sites}/mpl-brochure-site
+		root * {{ caddy.site_dir }}/mpl-brochure-site
 		rewrite @notfound /404.html
 		file_server
 	}
