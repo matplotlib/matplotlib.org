@@ -12,40 +12,47 @@
 	}
 }
 
-{{ caddy.address }} {
+# Setup webhooks
+{{ caddy.addresses.webhook }} {
 {% if caddy.tls_config is defined %}
 	{{ caddy.tls_config }}
 {% endif %}
 
 	root * {{ caddy.site_dir }}
 
-	# Setup a webhook
-	handle /gh/* {
-		# https://docs.github.com/en/developers/webhooks-and-events/webhooks/webhook-events-and-payloads#delivery-headers
-		@valid_webhook {
-			method POST
-			header Content-Type application/json
-			header User-Agent GitHub-Hookshot/*
-			header X-GitHub-Event ping
-			header X-GitHub-Event push
-			header X-GitHub-Delivery *
-			header X-Hub-Signature-256 *
-		}
+	# https://docs.github.com/en/developers/webhooks-and-events/webhooks/webhook-events-and-payloads#delivery-headers
+	@valid_webhook {
+		path /gh/*
+		method POST
+		header Content-Type application/json
+		header User-Agent GitHub-Hookshot/*
+		header X-GitHub-Event ping
+		header X-GitHub-Event push
+		header X-GitHub-Delivery *
+		header X-Hub-Signature-256 *
+	}
 
-		handle @valid_webhook {
-			reverse_proxy * localhost:1234 {
-				# Don't leak out internal problems.
-				@error status 4xx 5xx
-				handle_response @error {
-					error 400
-				}
+	handle @valid_webhook {
+		reverse_proxy * localhost:1234 {
+			# Don't leak out internal problems.
+			@error status 4xx 5xx
+			handle_response @error {
+				error 400
 			}
 		}
-
-		handle {
-			error 400
-		}
 	}
+
+	handle {
+		error 404
+	}
+}
+
+{{ caddy.addresses.main }} {
+{% if caddy.tls_config is defined %}
+	{{ caddy.tls_config }}
+{% endif %}
+
+	root * {{ caddy.site_dir }}
 
 {% for site in repos %}
 	import subproject {{ site }}
