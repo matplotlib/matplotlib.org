@@ -13,9 +13,11 @@
 }
 
 # Setup webhooks
-{{ caddy.addresses.webhook }} {
 {% if caddy.tls_config is defined %}
+https://{{ caddy.addresses.webhook }} {
 	{{ caddy.tls_config }}
+{% else %}
+http://{{ caddy.addresses.webhook }} {
 {% endif %}
 
 	root * {{ caddy.site_dir }}
@@ -47,9 +49,11 @@
 	}
 }
 
-{{ caddy.addresses.main }} {
 {% if caddy.tls_config is defined %}
+https://{{ caddy.addresses.main }} {
 	{{ caddy.tls_config }}
+{% else %}
+http://{{ caddy.addresses.main }} {
 {% endif %}
 
 	root * {{ caddy.site_dir }}

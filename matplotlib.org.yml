@@ -3,8 +3,8 @@
   vars:
     caddy:
       addresses:
-        main: "https://matplotlib.org"
-        webhook: "https://do.matplotlib.org"
+        main: "matplotlib.org"
+        webhook: "do.matplotlib.org"
       site_dir: "/usr/share/caddy"
       tls_config: "tls /etc/caddy/tls/cert.pem /etc/caddy/tls/privkey.pem"
     repos:
