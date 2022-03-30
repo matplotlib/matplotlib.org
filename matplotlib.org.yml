@@ -1,6 +1,12 @@
 ---
 - hosts: website
   vars:
+    caddy:
+      addresses:
+        main: "matplotlib.org"
+        webhook: "do.matplotlib.org"
+      site_dir: "/usr/share/caddy"
+      tls_config: "tls /etc/caddy/tls/cert.pem /etc/caddy/tls/privkey.pem"
     repos:
       - mpl-brochure-site
       - matplotlib.github.com
@@ -154,23 +160,11 @@
       tags: caddy
       block:
         - name: Configure Caddy
-          ansible.builtin.copy:
-            src: "{{playbook_dir}}/caddy/Caddyfile"
+          ansible.builtin.template:
+            src: Caddyfile.j2
             dest: /etc/caddy/Caddyfile
+            validate: "caddy validate --adapter caddyfile --config %s"
           notify: Reload Caddy
-
-        - name: Configure Caddy system service
-          ansible.builtin.file:
-            path: /etc/systemd/system/caddy.service.d
-            state: directory
-            mode: 0755
-        - name: Configure Caddy system service
-          ansible.builtin.copy:
-            src: "{{playbook_dir}}/caddy/caddy.service.override"
-            dest: /etc/systemd/system/caddy.service.d/override.conf
-          notify:
-            - Reload systemd
-            - Restart Caddy
 
         - name: Configure Caddy TLS certificate directory
           ansible.builtin.file:
