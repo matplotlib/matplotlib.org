@@ -163,6 +163,7 @@
           ansible.builtin.template:
             src: Caddyfile.j2
             dest: /etc/caddy/Caddyfile
+            validate: "caddy validate --adapter caddyfile --config %s"
           notify: Reload Caddy
 
         - name: Configure Caddy TLS certificate directory
