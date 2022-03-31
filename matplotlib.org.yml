@@ -15,6 +15,7 @@
       - cycler
       - devdocs
       - governance
+      - ipympl
       - matplotblog
       - mpl-altair
       - mpl-bench
