@@ -21,6 +21,7 @@
       - mpl-bench
       - mpl-gui
       - mpl-third-party
+      - pytest-mpl
   vars_files:
     - files/webhook_vars.yml
   tasks:
