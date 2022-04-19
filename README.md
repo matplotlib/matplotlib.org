@@ -146,3 +146,51 @@ Note down the outputs to verify later, e.g.,
 Finally, you should reboot the droplet. This is due to a bug in cloud-init on
 DigitalOcean, which generates a new machine ID after startup, causing system
 logs to be seem invisible.
+
+DNS setup
+---------
+
+1. Add an A record for `<prefix>.matplotlib.org` to the IPv4 address of the new
+   droplet.
+2. Add a CNAME record for `webNN.matplotlib.org` pointing to the given
+   `<prefix.matplotlib.org>`.
+
+Running Ansible
+---------------
+
+You must setup Ansible as described above. Verify that the new droplet is
+visible to Ansible by running:
+
+```
+ansible-inventory --graph
+```
+
+which should list the new droplet in the `website` tag:
+
+```
+@all:
+  |--@website:
+  |  |--venus.matplotlib.org
+```
+
+Then execute the Ansible playbook on the servers by running:
+
+```
+ansible-playbook --user root matplotlib.org.yml
+```
+
+During the initial "Gathering Facts" task, you will be prompted to accept the
+server's SSH fingerprint, which you should verify against the values found
+earlier. If there are existing servers that you don't want to touch, then you
+can use the `--limit` option. If you are using a non-default SSH key, you may
+wish to use the `--private-key` option.
+
+Flip main DNS
+-------------
+
+You can verify that the server is running correctly by connecting to
+`https://<prefix>.matplotlib.org` in your browser.
+
+Once everything is running, you should flip the DNS for the main site, changing
+the `matplotlib.org` CNAME to point to the new server's `webNN.matplotlib.org`
+functional name.
