@@ -56,6 +56,38 @@ There is currently only one playbook:
 * `matplotlib.org.yml`, for the main matplotlib.org hosting. This playbook
   operates on droplets with the `website` tag in DigitalOcean.
 
+Adding a new subproject
+=======================
+
+When a new repository is added to the Matplotlib organization with
+documentation (or an existing repository adds documentation), it will be
+necessary to re-configure the server to serve those files. Note, it is
+currently assumed that the documentation is on the `gh-pages` branch of the
+repository, and it will be served from the top-level subdirectory with the same
+name as the repository (similar to GitHub Pages.) There are 4 steps to achieve
+this:
+
+1. Generate a secret to secure the webhook. You can follow [GitHub's
+   instructions for creating
+   one](https://docs.github.com/en/developers/webhooks-and-events/webhooks/securing-your-webhooks).
+2. Add repository to Ansible:
+
+   1. Add an entry to the `repos` variable at the top of `matplotlib.org.yml`.
+   2. Add the webhook secret to `files/webhook_vars.yml`.
+
+3. Re-run Ansible on the playbook like [below](#running-ansible). This should
+   clone the new repository and update the webhook handler.
+4. Configure a webhook on the new repository with the following settings:
+
+   - Payload URL of `https://do.matplotlib.org/gh/<repository>`
+   - Content type of application/json
+   - Use the secret generated in step 1
+   - Trigger only on "push" events
+
+If everything is done correctly, the GitHub webhook should have posted an
+initial "ping" event successfully, and documentation should be available at
+`https://matplotlib.org/<repository>`.
+
 Provisioning a new server
 =========================
 
