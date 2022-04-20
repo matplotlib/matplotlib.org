@@ -50,10 +50,10 @@ http://{{ caddy.addresses.webhook }} {
 }
 
 {% if caddy.tls_config is defined %}
-https://{{ caddy.addresses.main }} {
+https://{{ caddy.addresses.main }}, https://{{ ansible_fqdn }} {
 	{{ caddy.tls_config }}
 {% else %}
-http://{{ caddy.addresses.main }} {
+http://{{ caddy.addresses.main }}, http://{{ ansible_fqdn }} {
 {% endif %}
 
 	root * {{ caddy.site_dir }}
