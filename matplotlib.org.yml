@@ -246,7 +246,7 @@
             dest: /etc/prometheus/prometheus.yml
             mode: 0644
           notify:
-            - Restart Prometheus
+            - Reload Prometheus
 
         - name: Enable prometheus node exporter service
           ansible.builtin.systemd:
@@ -320,6 +320,11 @@
     - name: Reload Caddy
       ansible.builtin.systemd:
         name: caddy
+        state: reloaded
+
+    - name: Reload Prometheus
+      ansible.builtin.systemd:
+        name: prometheus
         state: reloaded
 
     - name: Restart Prometheus
