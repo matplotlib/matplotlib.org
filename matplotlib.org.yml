@@ -41,7 +41,9 @@
 
         - name: Install server maintenance
           ansible.builtin.dnf:
-            name: "fail2ban"
+            name:
+              - dnf-automatic
+              - fail2ban
             state: present
 
         - name: Install web server requirements
@@ -63,6 +65,14 @@
               # Remove this when Loki is packaged.
               - podman
             state: present
+
+    # Automatic updates
+    # #################
+    - name: Enable automatic updates
+      ansible.builtin.systemd:
+        name: dnf-automatic-install.timer
+        enabled: true
+        state: started
 
     # Firewall setup
     # ##############
