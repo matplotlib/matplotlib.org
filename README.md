@@ -114,16 +114,16 @@ The summary of the initial setup is:
 3. Grab the SSH host fingerprints.
 4. Reboot.
 
-We currently use a simple $5 droplet from DigitalOcean. You can create one from
-the control panel, or using the `doctl` utility. Be sure to enable monitoring,
-and add the `website` tag and relevant SSH keys to the droplet. An example of
-using `doctl` is the following:
+We currently use a simple $10 droplet from DigitalOcean. You can create one
+from the control panel, or using the `doctl` utility. Be sure to enable
+monitoring, and add the `website` tag and relevant SSH keys to the droplet. An
+example of using `doctl` is the following:
 
 ```
 doctl compute droplet create \
     --image fedora-35-x64 \
     --region tor1 \
-    --size s-1vcpu-1gb \
+    --size s-1vcpu-2gb \
     --ssh-keys <key-id>,<key-id> \
     --tag-name website \
     --enable-monitoring \
@@ -136,7 +136,7 @@ of the new droplet from the output, e.g., in:
 
 ```
 ID           Name       Public IPv4    Private IPv4    Public IPv6    Memory    VCPUs    Disk    Region    Image            VPC UUID    Status    Tags       Features                    Volumes
-294098687    mpl.org                                                  1024      1        25      tor1      Fedora 35 x64                new       website    monitoring,droplet_agent
+294098687    mpl.org                                                  2048      1        50      tor1      Fedora 35 x64                new       website    monitoring,droplet_agent
 ```
 
 the droplet ID is 294098687.
