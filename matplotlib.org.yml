@@ -161,13 +161,6 @@
     - name: Caddy setup
       tags: caddy
       block:
-        - name: Configure Caddy
-          ansible.builtin.template:
-            src: Caddyfile.j2
-            dest: /etc/caddy/Caddyfile
-            validate: "caddy validate --adapter caddyfile --config %s"
-          notify: Reload Caddy
-
         - name: Configure Caddy TLS certificate directory
           ansible.builtin.file:
             path: /etc/caddy/tls
@@ -193,6 +186,13 @@
             group: caddy
           notify:
             - Reload Caddy
+
+        - name: Configure Caddy
+          ansible.builtin.template:
+            src: Caddyfile.j2
+            dest: /etc/caddy/Caddyfile
+            validate: "caddy validate --adapter caddyfile --config %s"
+          notify: Reload Caddy
 
         - name: Enable Caddy service
           ansible.builtin.systemd:
