@@ -11,6 +11,7 @@ User=caddy
 Group=caddy
 ExecStart=/usr/bin/python3 /usr/bin/webhook.py localhost:1234
 EnvironmentFile=/etc/caddy/webhook.env
+Restart=on-failure
 TimeoutStopSec=5s
 LimitNOFILE=1048576
 LimitNPROC=512
