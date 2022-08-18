@@ -173,6 +173,11 @@ async def github_webhook(request: web.Request):
     return web.Response(status=200)
 
 
+async def ping(request: web.Request):
+    """Respond to a ping, thus verifying the webhook service is alive."""
+    return web.Response(status=200)
+
+
 def create_app():
     """Create the aiohttp app and setup routes."""
     site_dir = Path(os.environ.get('SITE_DIR', 'sites')).resolve()
@@ -182,6 +187,7 @@ def create_app():
     app['site_dir'] = site_dir
     app.add_routes([
         web.post('/gh/{repo}', github_webhook),
+        web.get('/ping', ping),
     ])
     return app
 

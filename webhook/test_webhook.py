@@ -65,6 +65,15 @@ async def test_update_repo(tmp_path_factory):
     assert dest_commit == src_commit
 
 
+async def test_ping(aiohttp_client, monkeypatch, tmp_path):
+    """Test ping always works."""
+    monkeypatch.setenv('SITE_DIR', str(tmp_path))
+    client = await aiohttp_client(create_app())
+
+    resp = await client.get('/ping')
+    assert resp.status == 200
+
+
 async def test_github_webhook_errors(aiohttp_client, monkeypatch, tmp_path):
     """Test invalid inputs to webhook."""
     monkeypatch.setenv('SITE_DIR', str(tmp_path))
