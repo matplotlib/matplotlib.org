@@ -20,6 +20,7 @@ related projects are also exposed as toplevel directories:
 * [mpl-altair](https://github.com/matplotlib/mpl-altair)
 * [mpl-bench](https://github.com/matplotlib/mpl-bench)
 * [mpl-gui](https://github.com/matplotlib/mpl-gui)
+* [mpl-sphinx-theme](https://github.com/matplotlib/mpl-sphinx-theme)
 * [mpl-third-party](https://github.com/matplotlib/mpl-third-party)
 
 Ansible configuration
