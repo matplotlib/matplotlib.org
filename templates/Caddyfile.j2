@@ -46,6 +46,16 @@ http://{{ caddy.addresses.webhook }} {
 		}
 	}
 
+	handle /ping {
+		reverse_proxy * localhost:1234 {
+			# Don't leak out internal problems.
+			@error status 4xx 5xx
+			handle_response @error {
+				error 503
+			}
+		}
+	}
+
 	handle {
 		error 404
 	}
