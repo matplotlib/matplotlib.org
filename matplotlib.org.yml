@@ -20,6 +20,7 @@
       - mpl-altair
       - mpl-bench
       - mpl-gui
+      - mpl-sphinx-theme
       - mpl-third-party
       - pytest-mpl
   vars_files:
