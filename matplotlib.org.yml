@@ -164,7 +164,10 @@
           ansible.builtin.git:
             repo: "https://github.com/matplotlib/{{ item }}"
             dest: "/usr/share/caddy/{{ item }}"
-            version: gh-pages
+            version: >-
+              {{
+                (item == 'matplotlib.github.com') | ternary('main', 'gh-pages')
+              }}
           loop: "{{ repos }}"
 
     # Caddy server setup
