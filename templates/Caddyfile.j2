@@ -74,6 +74,10 @@ http://{{ caddy.addresses.main }}, http://{{ ansible_fqdn }} {
 	import subproject {{ site }}
 {% endfor %}
 
+	# Hide mpl-altair until the site is fixed.
+	redir /mpl-altair https://github.com/matplotlib/mpl-altair temporary
+	redir /mpl-altair/* https://github.com/matplotlib/mpl-altair temporary
+
 	# redirect the objects.inv
 	redir /objects.inv /stable/objects.inv permanent
 
