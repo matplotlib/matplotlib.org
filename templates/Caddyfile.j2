@@ -80,6 +80,8 @@ http://{{ caddy.addresses.main }}, http://{{ ansible_fqdn }} {
 
 	# redirect the objects.inv
 	redir /objects.inv /stable/objects.inv permanent
+	# Make search go to the actual docs instead of the mostly-empty brochure site.
+	redir /search.html /stable/search.html?{query} temporary
 
 	# Place the brochure site at the top level.
 	@brochure file {
