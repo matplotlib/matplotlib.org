@@ -22,6 +22,7 @@
       - mpl-sphinx-theme
       - mpl-third-party
       - pytest-mpl
+      - data-prototype
   vars_files:
     - files/webhook_vars.yml
   tasks:
