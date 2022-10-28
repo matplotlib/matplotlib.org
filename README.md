@@ -22,6 +22,7 @@ related projects are also exposed as toplevel directories:
 * [mpl-gui](https://github.com/matplotlib/mpl-gui)
 * [mpl-sphinx-theme](https://github.com/matplotlib/mpl-sphinx-theme)
 * [mpl-third-party](https://github.com/matplotlib/mpl-third-party)
+* [data-prototype](https://github.com/matplotlib/data-prototype)
 
 Ansible configuration
 =====================
