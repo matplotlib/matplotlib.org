@@ -74,6 +74,34 @@ http://{{ caddy.addresses.main }}, http://{{ ansible_fqdn }} {
 	import subproject {{ site }}
 {% endfor %}
 
+	# Moved matplotblog to Scientific Python blog.
+	##############################################
+	# Top-level post listings go to matplotlib tag.
+	@matplotblog {
+		path /matplotblog
+		path /matplotblog/
+		path /matplotblog/index.html
+		path /matplotblog/posts
+		path /matplotblog/posts/
+		path /matplotblog/posts/index.html
+		path /matplotblog/page
+		path /matplotblog/page/*
+	}
+	redir @matplotblog https://blog.scientific-python.org/tags/matplotlib/
+	# New blog doesn't do any post-processing of images, so go to original image.
+	@matplotblog_processed_image {
+		path_regexp image /matplotblog/posts/(.*)_hu[a-z0-9]+_[0-9]+_(400x300_fit|800x0_resize)_(q75_lanczos|lanczos_3).(png|jpeg|jpg)
+	}
+	redir @matplotblog_processed_image https://blog.scientific-python.org/posts/matplotlib/{re.image.1}.{re.image.4}
+	# Special cases.
+	redir /matplotblog/posts/how-to-contribute https://blog.scientific-python.org/submitting/
+	redir /matplotblog/posts/how-to-contribute/* https://blog.scientific-python.org/submitting/
+	# Everything else is a post or its assets, so redirect to the right post page/asset.
+	@matplotblog_post {
+		path_regexp post /matplotblog/posts/(.*)
+	}
+	redir @matplotblog_post https://blog.scientific-python.org/posts/matplotlib/{re.post.1}
+
 	# Hide mpl-altair until the site is fixed.
 	redir /mpl-altair https://github.com/matplotlib/mpl-altair temporary
 	redir /mpl-altair/* https://github.com/matplotlib/mpl-altair temporary
