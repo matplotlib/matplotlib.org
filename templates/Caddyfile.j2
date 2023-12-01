@@ -83,6 +83,19 @@ http://{{ caddy.addresses.main }}, http://{{ ansible_fqdn }} {
 	# Make search go to the actual docs instead of the mostly-empty brochure site.
 	redir /search.html /stable/search.html?{query} temporary
 
+	# Redirect contributing guides to latest version.
+	# If you go to /devel/...?reallystable=1 you can avoid the redirect.
+	@devel {
+		path /stable/devel /stable/devel/*
+		not query reallystable=1
+	}
+	handle @devel {
+		route {
+			uri strip_prefix /stable
+			redir * /devdocs{uri}
+		}
+	}
+
 	# Place the brochure site at the top level.
 	@brochure file {
 		root {{ caddy.site_dir }}/mpl-brochure-site
