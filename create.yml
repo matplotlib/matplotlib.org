@@ -1,0 +1,142 @@
+---
+- hosts: localhost
+  tasks:
+    - name: Gather information about DigitalOcean droplets
+      community.digitalocean.digital_ocean_droplet_info:
+      register: do_droplets
+    - name: Gather information about DigitalOcean SSH keys
+      community.digitalocean.digital_ocean_sshkey_info:
+      register: do_ssh_keys
+
+    - name: Print info on existing droplets
+      ansible.builtin.debug:
+        msg: >-
+          {{ item.name }}:
+          {{ item.networks.v4 | map(attribute='ip_address') | join(',') }}
+      loop: "{{ do_droplets.data }}"
+      loop_control:
+        label: "{{ item.id }}"
+
+    - name: "Enter name for new droplet (subdomain only)"
+      ansible.builtin.pause:
+      register: input_name
+      when: host is not defined
+
+    - name: "Enter functional name for new droplet (webNN)"
+      ansible.builtin.pause:
+      register: input_functional
+      when: functional is not defined
+
+    - name: Print available SSH public keys
+      ansible.builtin.debug:
+        msg: "{{ item.name}} {{ item.fingerprint }}"
+      loop: "{{ do_ssh_keys.data }}"
+      loop_control:
+        label: "{{ item.id }}"
+
+    - name: "Enter SSH key names for new droplet (space separated)"
+      ansible.builtin.pause:
+      register: input_ssh_keys
+      when: ssh_keys is not defined
+
+    - name: Set droplet facts
+      ansible.builtin.set_fact:
+        host: >-
+          {{
+            (host if host is defined else input_name.user_input) |
+            trim
+          }}
+        functional: >-
+          {{
+            (functional if functional is defined else input_functional.user_input) |
+            trim
+          }}
+        ssh_fingerprints: >-
+          {{
+            do_ssh_keys.data |
+            selectattr(
+              'name',
+              'in',
+              (ssh_keys if ssh_keys is defined
+               else input_ssh_keys.user_input) | split) |
+            map(attribute='fingerprint')
+          }}
+
+    - name: Verify droplet configuration
+      ansible.builtin.assert:
+        that:
+          - host in valid_planets
+          # Must not be an existing name.
+          - >-
+            do_droplets.data |
+            selectattr('name', 'equalto', '{{ host }}.matplotlib.org') |
+            count == 0
+          # TODO: Also check that functional name doesn't already exist.
+          - functional is regex('^web[0-9][0-9]$')
+          # At least 1 key, and same number as requested.
+          - ssh_fingerprints | length >= 1
+          - >-
+            ssh_fingerprints | length == (
+              ssh_keys if ssh_keys is defined
+              else input_ssh_keys.user_input) | split | length
+
+    - name: Print configuration
+      ansible.builtin.debug:
+        msg: "Creating droplet '{{ host }}' with SSH keys {{ ssh_fingerprints }}"
+
+    - name: Please verify the above configuration
+      ansible.builtin.pause:
+
+    - name: Create droplet on DigitalOcean
+      community.digitalocean.digital_ocean_droplet:
+        state: present
+        name: "{{ host }}.matplotlib.org"
+        firewall:
+          - Web
+        image: fedora-39-x64
+        monitoring: true
+        project: matplotlib.org
+        region: tor1
+        size: s-1vcpu-2gb
+        ssh_keys: "{{ ssh_fingerprints }}"
+        tags:
+          - website
+        unique_name: true
+      register: new_droplet
+
+    - name: Setup DNS for droplet on CloudFlare
+      community.general.cloudflare_dns:
+        state: present
+        proxied: true
+        record: "{{ host }}"
+        type: A
+        value: >-
+          {{
+            new_droplet.data.droplet.networks.v4 |
+            selectattr('type', 'equalto', 'public') |
+            map(attribute='ip_address') |
+            first
+          }}
+        zone: matplotlib.org
+
+    - name: Setup functional DNS for droplet on CloudFlare
+      community.general.cloudflare_dns:
+        state: present
+        proxied: true
+        record: "{{ functional }}"
+        type: CNAME
+        value: "{{ host }}.matplotlib.org"
+        zone: matplotlib.org
+
+  vars:
+    # We currently name servers based on planets in the Solar System.
+    valid_planets:
+      - mercury
+      - venus
+      - earth
+      - mars
+      - jupiter
+      - saturn
+      - uranus
+      - neptune
+      - pluto

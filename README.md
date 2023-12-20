@@ -38,6 +38,9 @@ prerequisites:
 
 * Create a DigitalOcean API token, and pass it to the inventory generator by
   setting the `DO_API_TOKEN` environment variable.
+* If you are creating a new droplet, and want to configure DNS as well, then
+  create a CloudFlare API token, and pass it to the Ansible playbook by setting
+  the `CLOUDFLARE_TOKEN` environment variable.
 * Set the vault decryption password of the Ansible vaulted file with our
   secrets. This may be done by setting the `ANSIBLE_VAULT_PASSWORD_FILE`
   environment variable to point to a file containing the password.
@@ -99,9 +102,11 @@ Naming
 We follow a simplified version of the naming scheme on [this blog
 post](https://mnx.io/blog/a-proper-server-naming-scheme/):
 
-* Servers are named `<prefix>.matplotlib.org` in A records.
-* Servers get a functional CNAME alias (e.g., `web01.matplotlib.org`).
-* matplotlib.org is a CNAME to the functional CNAME of a server.
+* Servers are named `<prefix>.matplotlib.org` in A records, pointing to the
+  IPv4 address of the droplet.
+* Servers get a functional CNAME alias (e.g., `web01.matplotlib.org`) pointing
+  to the hostname `<prefix>.matplotlib.org`.
+* matplotlib.org is a CNAME alias of the functional CNAME of a server.
 
 We use [planets in our Solar System](https://namingschemes.com/Solar_System)
 for the name prefix. When creating a new server, pick the next one in the list.
@@ -113,50 +118,33 @@ The summary of the initial setup is:
 
 1. Create the droplet with monitoring and relevant SSH keys.
 2. Assign new droplet to the matplotlib.org project and the Web firewall.
-3. Grab the SSH host fingerprints.
-4. Reboot.
+3. Add DNS entries pointing to the server on CloudFlare.
+4. Grab the SSH host fingerprints.
+5. Reboot.
 
-We currently use a simple $10 droplet from DigitalOcean. You can create one
-from the control panel, or using the `doctl` utility. Be sure to enable
-monitoring, and add the `website` tag and relevant SSH keys to the droplet. An
-example of using `doctl` is the following:
-
-```
-doctl compute droplet create \
-    --image fedora-35-x64 \
-    --region tor1 \
-    --size s-1vcpu-2gb \
-    --ssh-keys <key-id>,<key-id> \
-    --tag-name website \
-    --enable-monitoring \
-    venus.matplotlib.org
-```
-
-Note, you will have to use `doctl compute ssh-key list` to get the IDs of the
-relevant SSH keys saved on DigitalOcean, and substitute them above. Save the ID
-of the new droplet from the output, e.g., in:
+We currently use a simple $12 droplet from DigitalOcean. You can create one
+from the control panel, or using the `create.yml` Ansible playbook:
 
 ```
-ID           Name       Public IPv4    Private IPv4    Public IPv6    Memory    VCPUs    Disk    Region    Image            VPC UUID    Status    Tags       Features                    Volumes
-294098687    mpl.org                                                  2048      1        50      tor1      Fedora 35 x64                new       website    monitoring,droplet_agent
+ansible-playbook create.yml
 ```
 
-the droplet ID is 294098687.
+This playbook will prompt you for 3 settings:
 
+1. The host name of the droplet, which should follow the naming convention
+   above.
+2. The functional CNAME alias of the droplet.
+3. The names of SSH keys to add to the droplet.
 
-You should also assign the new droplet to the `matplotlib.org` project and the
-`Web` firewall:
+You may also pass these directly to Ansible as:
 
 ```
-doctl projects list
-# Get ID of the matplotlib.org project from the output.
-doctl projects resources assign <project-id> --resource=do:droplet:<droplet-id>
-
-
-doctl compute firewall list
-# Get ID of the Web firewall from the output.
-doctl compute firewall add-droplets <firewall-id> --droplet-ids <droplet-id>
+ansible-playbook create.yml --extra-vars "host=pluto functional=web99 ssh_keys='a b c'"
 ```
+
+The playbook will create the server, as well as add DNS records on CloudFlare.
+Note, you must set `DO_API_TOKEN` and `CLOUDFLARE_TOKEN` in the environment to
+access these services.
 
 Then, to ensure you are connecting to the expected server, you should grab the
 SSH host keys via the DigitalOcean Droplet Console:
@@ -180,14 +168,6 @@ Note down the outputs to verify later, e.g.,
 Finally, you should reboot the droplet. This is due to a bug in cloud-init on
 DigitalOcean, which generates a new machine ID after startup, causing system
 logs to be seem invisible.
-
-DNS setup
----------
-
-1. Add an A record for `<prefix>.matplotlib.org` to the IPv4 address of the new
-   droplet.
-2. Add a CNAME record for `webNN.matplotlib.org` pointing to the given
-   `<prefix.matplotlib.org>`.
 
 Running Ansible
 ---------------
