@@ -159,10 +159,10 @@ Note down the outputs to verify later, e.g.,
 
 ```
 # Use these for comparison when connecting yourself.
-1024 SHA256:ExviVyBRoNKsZpgmIfBaejh1ElOpJ/9fC+ki2Fn5Xj4 root@venus.matplotlib.org (DSA)
-256 SHA256:hLA7ePr0D4AgiC21IXowtbpcUNnTGgpPB7NOYepQtxg root@venus.matplotlib.org (ECDSA)
-256 SHA256:MggFZQbZ7wID1Se2EmOwAm8AaJeA97L8sD8DhSrKy1g root@venus.matplotlib.org (ED25519)
-3072 SHA256:MCkDgfbn0sMTCtvAtfD0HmGJV3LVTjpUj6IcfWRHRQo root@venus.matplotlib.org (RSA)
+1024 SHA256:J2sbqvhI/VszBtVvPabgxyz6sRnGLrZUn0kqfv4doAM root@mercury.matplotlib.org (DSA)
+256 SHA256:J0rOMayXhL1+5wbm4WQNpAvmscDjqwJjAtk1SLemRMI root@mercury.matplotlib.org (ECDSA)
+256 SHA256:y8EDRGMpLWOW72x47MVKsAfSAl8JHjsOc/RGaiMTPGs root@mercury.matplotlib.org (ED25519)
+3072 SHA256:AyuNO8FES5k9vobv0Pu9XpvtjVFZ1bTTNxb1lo+AuRA root@mercury.matplotlib.org (RSA)
 ```
 
 Finally, you should reboot the droplet. This is due to a bug in cloud-init on

@@ -69,7 +69,7 @@
           # Must not be an existing name.
           - >-
             do_droplets.data |
-            selectattr('name', 'equalto', '{{ host }}.matplotlib.org') |
+            selectattr('name', 'equalto', host + '.matplotlib.org') |
             count == 0
           # TODO: Also check that functional name doesn't already exist.
           - functional is regex('^web[0-9][0-9]$')

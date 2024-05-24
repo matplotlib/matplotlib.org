@@ -67,6 +67,12 @@
               - podman
             state: present
 
+        - name: Allow Grafana to connect to Prometheus
+          ansible.posix.seboolean:
+            name: grafana_can_tcp_connect_prometheus_port
+            state: true
+            persistent: true
+
     # Automatic updates
     # #################
     - name: Enable automatic updates
