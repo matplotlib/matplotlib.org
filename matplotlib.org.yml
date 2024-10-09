@@ -8,6 +8,8 @@
       site_dir: "/usr/share/caddy"
       tls_config: "tls /etc/caddy/tls/cert.pem /etc/caddy/tls/privkey.pem"
     repos:
+      # Key is repo name, value is the site /path/ (which defaults to the repo
+      # name if not set).
       mpl-brochure-site:
       matplotlib.github.com:
       basemap:
