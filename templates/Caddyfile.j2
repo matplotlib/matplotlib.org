@@ -3,10 +3,10 @@
 (subproject) {
 	# Caddy doesn't know this is a directory, so redirect to trailing / as
 	# would usually happen for them.
-	redir /{args.0} /{args.0}/ permanent
+	redir /{args[0]} /{args[0]}/ permanent
 
-	handle_path /{args.0}/* {
-		root * {{ caddy.site_dir }}/{args.0}
+	handle_path /{args[0]}/* {
+		root * {{ caddy.site_dir }}/{args[0]}
 		try_files {path}.html {path}
 		file_server {
 			hide .git
