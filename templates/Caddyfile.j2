@@ -3,9 +3,9 @@
 (subproject) {
 	# Caddy doesn't know this is a directory, so redirect to trailing / as
 	# would usually happen for them.
-	redir /{args[0]} /{args[0]}/ permanent
+	redir /{args[1]} /{args[1]}/ permanent
 
-	handle_path /{args[0]}/* {
+	handle_path /{args[1]}/* {
 		root * {{ caddy.site_dir }}/{args[0]}
 		try_files {path}.html {path}
 		file_server {
@@ -70,8 +70,8 @@ http://{{ caddy.addresses.main }}, http://{{ ansible_fqdn }} {
 
 	root * {{ caddy.site_dir }}
 
-{% for site in repos %}
-	import subproject {{ site }}
+{% for site, path in repos.items() %}
+	import subproject {{ site }} {{ path | default(site, true) }}
 {% endfor %}
 
 	# Hide mpl-altair until the site is fixed.
@@ -93,6 +93,16 @@ http://{{ caddy.addresses.main }}, http://{{ ansible_fqdn }} {
 		route {
 			uri strip_prefix /stable
 			redir * /devdocs{uri}
+		}
+	}
+
+	# Redirect the repo-named third-party packages path to the more-generic path.
+	redir /3pp /thirdpartypackages/  # And also add a shortcut.
+	@mpl-third-party path /mpl-third-party /mpl-third-party/*
+	handle @mpl-third-party {
+		route {
+			uri strip_prefix /mpl-third-party
+			redir * /thirdpartypackages{uri}
 		}
 	}
 
