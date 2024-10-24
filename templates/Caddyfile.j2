@@ -3,10 +3,10 @@
 (subproject) {
 	# Caddy doesn't know this is a directory, so redirect to trailing / as
 	# would usually happen for them.
-	redir /{args.0} /{args.0}/ permanent
+	redir /{args[1]} /{args[1]}/ permanent
 
-	handle_path /{args.0}/* {
-		root * {{ caddy.site_dir }}/{args.0}
+	handle_path /{args[1]}/* {
+		root * {{ caddy.site_dir }}/{args[0]}
 		try_files {path}.html {path}
 		file_server {
 			hide .git
@@ -70,8 +70,8 @@ http://{{ caddy.addresses.main }}, http://{{ ansible_fqdn }} {
 
 	root * {{ caddy.site_dir }}
 
-{% for site in repos %}
-	import subproject {{ site }}
+{% for site, path in repos.items() %}
+	import subproject {{ site }} {{ path | default(site, true) }}
 {% endfor %}
 
 	# Hide mpl-altair until the site is fixed.
@@ -96,6 +96,16 @@ http://{{ caddy.addresses.main }}, http://{{ ansible_fqdn }} {
 		}
 	}
 
+	# Redirect the repo-named third-party packages path to the more-generic path.
+	redir /3pp /thirdpartypackages/  # And also add a shortcut.
+	@mpl-third-party path /mpl-third-party /mpl-third-party/*
+	handle @mpl-third-party {
+		route {
+			uri strip_prefix /mpl-third-party
+			redir * /thirdpartypackages{uri}
+		}
+	}
+
 	# Place the brochure site at the top level.
 	@brochure file {
 		root {{ caddy.site_dir }}/mpl-brochure-site
@@ -103,6 +113,70 @@ http://{{ caddy.addresses.main }}, http://{{ ansible_fqdn }} {
 	}
 	rewrite / /mpl-brochure-site/index.html
 	rewrite @brochure /mpl-brochure-site{http.matchers.file.relative}
+
+	# Redirect any of the old top-level files to the versioned docs.
+	redir /citing.html /stable/project/citing.html permanent
+	redir /contents.html /stable/users/ permanent
+	redir /downloads.html /stable/users/installing/ permanent
+	redir /gallery.html /stable/gallery/ permanent
+	redir /py-modindex.html /stable/py-modindex.html permanent
+{# 3.5.0 was the last version to be synced to the top-level directory.
+   We also try for stable, just to go to the best version possible. #}
+{%- with old_versions = [
+    "stable",
+    "3.5.0",
+    "3.4.3", "3.4.2", "3.4.1", "3.4.0",
+    "3.3.4", "3.3.3", "3.3.2", "3.3.1", "3.3.0",
+    "3.2.2", "3.2.1", "3.2.0",
+    "3.1.3", "3.1.1", "3.1.0",
+    "3.0.3", "3.0.2", "3.0.0",
+    "2.2.5", "2.2.4", "2.2.3", "2.2.2", "2.2.0",
+    "2.1.2", "2.1.1", "2.1.0",
+    "2.0.2", "2.0.1", "2.0.0",
+    "1.5.3", "1.5.1", "1.5.0",
+    "1.4.3", "1.4.2", "1.4.1", "1.4.0",
+    "1.3.1", "1.3.0", "1.2.1",
+] %}
+{%- with old_toplevel_dirs = [
+    "_downloads",
+    "_images",
+    "_modules",
+    "_panels_static",
+    "_sources",
+    "_static",
+    "api",
+    "devel",
+    "examples",
+    "faq",
+    "gallery",
+    "glossary",
+    "mpl_examples",
+    "mpl_toolkits",
+    "plot_directive",
+    "plot_types",
+    "pyplots",
+    "resources",
+    "tutorials",
+    "users",
+] %}
+	@old-toplevel-dirs {
+		path{% for dir in old_toplevel_dirs %} /{{dir}} /{{dir}}/{% endfor +%}
+		file {
+			root {{ caddy.site_dir }}/matplotlib.github.com
+			try_files{% for version in old_versions %} /{{version}}/{path}/index.html{% endfor +%}
+		}
+	}
+	redir @old-toplevel-dirs {http.matchers.file.relative} permanent
+	@old-toplevel-dir-contents {
+		path{% for dir in old_toplevel_dirs %} /{{dir}}/*{% endfor +%}
+		file {
+			root {{ caddy.site_dir }}/matplotlib.github.com
+			try_files{% for version in old_versions %} /{{version}}/{path}.html /{{version}}/{path}{% endfor +%}
+		}
+	}
+	redir @old-toplevel-dir-contents {http.matchers.file.relative} permanent
+{%- endwith -%}
+{%- endwith +%}
 
 	# Finally try any of the versioned docs.
 	handle {

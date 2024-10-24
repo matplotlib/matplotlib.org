@@ -8,21 +8,23 @@
       site_dir: "/usr/share/caddy"
       tls_config: "tls /etc/caddy/tls/cert.pem /etc/caddy/tls/privkey.pem"
     repos:
-      - mpl-brochure-site
-      - matplotlib.github.com
-      - basemap
-      - cheatsheets
-      - cycler
-      - devdocs
-      - governance
-      - ipympl
-      - matplotblog
-      - mpl-bench
-      - mpl-gui
-      - mpl-sphinx-theme
-      - mpl-third-party
-      - pytest-mpl
-      - data-prototype
+      # Key is repo name, value is the site /path/ (which defaults to the repo
+      # name if not set).
+      mpl-brochure-site:
+      matplotlib.github.com:
+      basemap:
+      cheatsheets:
+      cycler:
+      devdocs:
+      governance:
+      ipympl:
+      matplotblog:
+      mpl-bench:
+      mpl-gui:
+      mpl-sphinx-theme:
+      mpl-third-party: thirdpartypackages
+      pytest-mpl:
+      data-prototype:
   vars_files:
     - files/webhook_vars.yml
   tasks:
@@ -162,7 +164,7 @@
             mode: 0755
             owner: caddy
             group: caddy
-          loop: "{{ repos }}"
+          loop: "{{ repos.keys() }}"
 
         - name: Clone Git repositories
           become: true
@@ -174,7 +176,7 @@
               {{
                 (item == 'matplotlib.github.com') | ternary('main', 'gh-pages')
               }}
-          loop: "{{ repos }}"
+          loop: "{{ repos.keys() }}"
 
     # Caddy server setup
     # ##################
