@@ -22,6 +22,15 @@ https://{{ caddy.addresses.webhook }} {
 http://{{ caddy.addresses.webhook }} {
 {% endif %}
 
+	# Include access logs when an error occurs, since we mask any internal errors
+	# from escaping to the outside world, but otherwise don't log.
+	log {
+		output discard
+	}
+	log errors {
+		no_hostname
+	}
+
 	root * {{ caddy.site_dir }}
 
 	# https://docs.github.com/en/developers/webhooks-and-events/webhooks/webhook-events-and-payloads#delivery-headers
@@ -41,6 +50,9 @@ http://{{ caddy.addresses.webhook }} {
 			# Don't leak out internal problems.
 			@error status 4xx 5xx
 			handle_response @error {
+				log_name errors
+				log_append api_error_code {rp.status_code}
+				log_append api_error_text {rp.status_text}
 				error 400
 			}
 		}
@@ -51,6 +63,9 @@ http://{{ caddy.addresses.webhook }} {
 			# Don't leak out internal problems.
 			@error status 4xx 5xx
 			handle_response @error {
+				log_name errors
+				log_append api_error_code {rp.status_code}
+				log_append api_error_text {rp.status_text}
 				error 503
 			}
 		}
