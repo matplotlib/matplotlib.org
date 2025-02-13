@@ -117,7 +117,7 @@ Initial setup
 The summary of the initial setup is:
 
 1. Create the droplet with monitoring and relevant SSH keys.
-2. Assign new droplet to the matplotlib.org project and the Web firewall.
+2. Assign new droplet to the matplotlib.org project.
 3. Add DNS entries pointing to the server on CloudFlare.
 4. Grab the SSH host fingerprints.
 5. Reboot.

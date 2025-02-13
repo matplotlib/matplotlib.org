@@ -91,8 +91,6 @@
       community.digitalocean.digital_ocean_droplet:
         state: present
         name: "{{ host }}.matplotlib.org"
-        firewall:
-          - Web
         image: fedora-39-x64
         monitoring: true
         project: matplotlib.org
