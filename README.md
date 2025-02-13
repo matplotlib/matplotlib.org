@@ -37,10 +37,14 @@ Before you can run our Ansible playbooks, you need to meet the following
 prerequisites:
 
 * Create a DigitalOcean API token, and pass it to the inventory generator by
-  setting the `DO_API_TOKEN` environment variable.
+  setting the `DO_API_TOKEN` environment variable. The API token must have
+  access to the following scopes:
+    - Read: droplet, firewall, monitoring, project, ssh_key
+    - Create: droplet
+    - Update: droplet, monitoring, project
 * If you are creating a new droplet, and want to configure DNS as well, then
-  create a CloudFlare API token, and pass it to the Ansible playbook by setting
-  the `CLOUDFLARE_TOKEN` environment variable.
+  create a CloudFlare API token with DNS edit permissions, and pass it to the
+  Ansible playbook by setting the `CLOUDFLARE_TOKEN` environment variable.
 * Set the vault decryption password of the Ansible vaulted file with our
   secrets. This may be done by setting the `ANSIBLE_VAULT_PASSWORD_FILE`
   environment variable to point to a file containing the password.
