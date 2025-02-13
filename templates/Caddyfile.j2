@@ -33,6 +33,10 @@ http://{{ caddy.addresses.webhook }} {
 
 	root * {{ caddy.site_dir }}
 
+	request_body {
+		max_size 25MB  # Limit from GitHub.
+	}
+
 	# https://docs.github.com/en/developers/webhooks-and-events/webhooks/webhook-events-and-payloads#delivery-headers
 	@valid_webhook {
 		path /gh/*
@@ -84,6 +88,10 @@ http://{{ caddy.addresses.main }}, http://{{ ansible_fqdn }} {
 {% endif %}
 
 	root * {{ caddy.site_dir }}
+
+	request_body {
+		max_size 0
+	}
 
 {% for site, path in repos.items() %}
 	import subproject {{ site }} {{ path | default(site, true) }}
