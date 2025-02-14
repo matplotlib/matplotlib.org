@@ -148,7 +148,8 @@ ansible-playbook create.yml --extra-vars "host=pluto functional=web99 ssh_keys='
 
 The playbook will create the server, as well as add DNS records on CloudFlare.
 Note, you must set `DO_API_TOKEN` and `CLOUDFLARE_TOKEN` in the environment to
-access these services.
+access these services. The droplet ID and IP address will be printed at the
+end of the playbook.
 
 Then, to ensure you are connecting to the expected server, you should grab the
 SSH host keys via the DigitalOcean Droplet Console:
@@ -172,6 +173,12 @@ Note down the outputs to verify later, e.g.,
 Finally, you should reboot the droplet. This is due to a bug in cloud-init on
 DigitalOcean, which generates a new machine ID after startup, causing system
 logs to be seem invisible.
+
+This can be done from the Console, or via the CLI:
+
+```
+doctl compute droplet-action reboot <droplet-id>
+```
 
 Running Ansible
 ---------------
