@@ -91,7 +91,7 @@
       community.digitalocean.digital_ocean_droplet:
         state: present
         name: "{{ host }}.matplotlib.org"
-        image: fedora-39-x64
+        image: fedora-41-x64
         monitoring: true
         project: matplotlib.org
         region: tor1
