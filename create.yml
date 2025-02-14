@@ -91,9 +91,7 @@
       community.digitalocean.digital_ocean_droplet:
         state: present
         name: "{{ host }}.matplotlib.org"
-        firewall:
-          - Web
-        image: fedora-39-x64
+        image: fedora-41-x64
         monitoring: true
         project: matplotlib.org
         region: tor1
@@ -117,6 +115,8 @@
             map(attribute='ip_address') |
             first
           }}
+        tags:
+          - website
         zone: matplotlib.org
 
     - name: Setup functional DNS for droplet on CloudFlare
@@ -126,7 +126,22 @@
         record: "{{ functional }}"
         type: CNAME
         value: "{{ host }}.matplotlib.org"
+        tags:
+          - website
         zone: matplotlib.org
+
+    - name: Print droplet info
+      ansible.builtin.debug:
+        msg:
+          - "Droplet ID is {{ new_droplet.data.droplet.id }}"
+          - >-
+              First Public IPv4 is {{
+                (new_droplet.data.droplet.networks.v4 | selectattr('type', 'equalto', 'public')).0.ip_address |
+                default('<none>', true) }}
+          - >-
+              First Private IPv4 is {{
+                (new_droplet.data.droplet.networks.v4 | selectattr('type', 'equalto', 'private')).0.ip_address |
+                default('<none>', true) }}
 
   vars:
     # We currently name servers based on planets in the Solar System.

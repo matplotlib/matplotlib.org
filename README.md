@@ -37,10 +37,14 @@ Before you can run our Ansible playbooks, you need to meet the following
 prerequisites:
 
 * Create a DigitalOcean API token, and pass it to the inventory generator by
-  setting the `DO_API_TOKEN` environment variable.
+  setting the `DO_API_TOKEN` environment variable. The API token must have
+  access to the following scopes:
+    - Read: droplet, firewall, monitoring, project, ssh_key
+    - Create: droplet
+    - Update: droplet, monitoring, project
 * If you are creating a new droplet, and want to configure DNS as well, then
-  create a CloudFlare API token, and pass it to the Ansible playbook by setting
-  the `CLOUDFLARE_TOKEN` environment variable.
+  create a CloudFlare API token with DNS edit permissions, and pass it to the
+  Ansible playbook by setting the `CLOUDFLARE_TOKEN` environment variable.
 * Set the vault decryption password of the Ansible vaulted file with our
   secrets. This may be done by setting the `ANSIBLE_VAULT_PASSWORD_FILE`
   environment variable to point to a file containing the password.
@@ -117,7 +121,7 @@ Initial setup
 The summary of the initial setup is:
 
 1. Create the droplet with monitoring and relevant SSH keys.
-2. Assign new droplet to the matplotlib.org project and the Web firewall.
+2. Assign new droplet to the matplotlib.org project.
 3. Add DNS entries pointing to the server on CloudFlare.
 4. Grab the SSH host fingerprints.
 5. Reboot.
@@ -144,7 +148,8 @@ ansible-playbook create.yml --extra-vars "host=pluto functional=web99 ssh_keys='
 
 The playbook will create the server, as well as add DNS records on CloudFlare.
 Note, you must set `DO_API_TOKEN` and `CLOUDFLARE_TOKEN` in the environment to
-access these services.
+access these services. The droplet ID and IP address will be printed at the
+end of the playbook.
 
 Then, to ensure you are connecting to the expected server, you should grab the
 SSH host keys via the DigitalOcean Droplet Console:
@@ -159,15 +164,20 @@ Note down the outputs to verify later, e.g.,
 
 ```
 # Use these for comparison when connecting yourself.
-1024 SHA256:J2sbqvhI/VszBtVvPabgxyz6sRnGLrZUn0kqfv4doAM root@mercury.matplotlib.org (DSA)
-256 SHA256:J0rOMayXhL1+5wbm4WQNpAvmscDjqwJjAtk1SLemRMI root@mercury.matplotlib.org (ECDSA)
-256 SHA256:y8EDRGMpLWOW72x47MVKsAfSAl8JHjsOc/RGaiMTPGs root@mercury.matplotlib.org (ED25519)
-3072 SHA256:AyuNO8FES5k9vobv0Pu9XpvtjVFZ1bTTNxb1lo+AuRA root@mercury.matplotlib.org (RSA)
+256 SHA256:p6MiA8+IO1WcpXHDOQ4rhiVCo+MDxWB7ehfNfxvbDkU root@venus.matplotlib.org (ECDSA)
+256 SHA256:RfDahJqnQFLeFN+zl9f+hmB+W05OoZK26NfNQkj6KtY root@venus.matplotlib.org (ED25519)
+3072 SHA256:tYwdULlz5/XP5Ze7PCj9XpO3VIMEZkiOiFuhr9nke34 root@venus.matplotlib.org (RSA)
 ```
 
 Finally, you should reboot the droplet. This is due to a bug in cloud-init on
 DigitalOcean, which generates a new machine ID after startup, causing system
 logs to be seem invisible.
+
+This can be done from the Console, or via the CLI:
+
+```
+doctl compute droplet-action reboot <droplet-id>
+```
 
 Running Ansible
 ---------------
