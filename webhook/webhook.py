@@ -88,10 +88,6 @@ async def github_webhook(request: web.Request):
 
     We only handle ping and push events (this is enforced by the Caddyfile).
     """
-    # Verify some input parameters.
-    if request.content_length > 25_000_000:  # Limit from GitHub.
-        raise web.HTTPBadRequest(reason='Request too large')
-
     # This should be guarded against by Caddy, but check anyway.
     # https://docs.github.com/en/developers/webhooks-and-events/webhooks/webhook-events-and-payloads#delivery-headers
     try:
@@ -183,7 +179,7 @@ def create_app():
     site_dir = Path(os.environ.get('SITE_DIR', 'sites')).resolve()
     assert site_dir.is_dir()
 
-    app = web.Application()
+    app = web.Application(client_max_size=25_000_000)  # Limit from GitHub.
     app['site_dir'] = site_dir
     app.add_routes([
         web.post('/gh/{repo}', github_webhook),
