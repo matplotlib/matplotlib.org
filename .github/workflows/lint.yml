@@ -13,7 +13,7 @@ jobs:
     permissions:
       checks: write
     steps:
-      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10  # v6.0.3
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
         with:
           persist-credentials: false
 
@@ -41,7 +41,7 @@ jobs:
     permissions:
       checks: write
     steps:
-      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10  # v6.0.3
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
         with:
           persist-credentials: false
 
@@ -49,7 +49,7 @@ jobs:
         uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405  # v6.2.0
 
       - name: ansible-lint
-        uses: reviewdog/action-ansiblelint@5b8ca4b12dcbcdf63d4739dacd90609abafe8924  # v1.17.0
+        uses: reviewdog/action-ansiblelint@4416d8eb70bc345d589ff60817395e4bdaf1981b  # v1.18.0
 
   yamllint:
     name: YAML Lint
@@ -57,7 +57,7 @@ jobs:
     permissions:
       checks: write
     steps:
-      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10  # v6.0.3
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
         with:
           persist-credentials: false
 
@@ -65,4 +65,4 @@ jobs:
         uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405  # v6.2.0
 
       - name: yamllint
-        uses: reviewdog/action-yamllint@f01d8a48fd8d89f89895499fca2cff09f9e9e8c0  # v1.21.0
+        uses: reviewdog/action-yamllint@b5f7217d8c815ae374d1d55840d5e569d82f01f0  # v1.22.0
