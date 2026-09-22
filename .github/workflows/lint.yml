@@ -49,7 +49,7 @@ jobs:
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97  # v7.0.0
 
       - name: ansible-lint
-        uses: reviewdog/action-ansiblelint@4416d8eb70bc345d589ff60817395e4bdaf1981b  # v1.18.0
+        uses: reviewdog/action-ansiblelint@57a0721547b93e9925bd05bf20ea17810bb3cff7  # v1.20.0
 
   yamllint:
     name: YAML Lint
@@ -65,4 +65,4 @@ jobs:
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97  # v7.0.0
 
       - name: yamllint
-        uses: reviewdog/action-yamllint@de68272fdca5f2a961fb309e0d2e13c2eb186d9e  # v1.23.1
+        uses: reviewdog/action-yamllint@290d92c84b22627946efc7fd6f038ade2d2beede  # v1.25.0
