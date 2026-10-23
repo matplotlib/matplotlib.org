@@ -21,6 +21,7 @@
       matplotblog:
       mpl-bench:
       mpl-gui:
+      mpl-probscale:
       mpl-sphinx-theme:
       mpl-third-party: thirdpartypackages
       pytest-mpl:
