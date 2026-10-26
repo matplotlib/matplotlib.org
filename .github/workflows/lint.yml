@@ -18,7 +18,7 @@ jobs:
           persist-credentials: false
 
       - name: Set up Python 3
-        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97  # v7.0.0
+        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0  # v7.1.0
 
       - name: Install flake8
         run: pip3 install flake8
@@ -46,7 +46,7 @@ jobs:
           persist-credentials: false
 
       - name: Set up Python 3
-        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97  # v7.0.0
+        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0  # v7.1.0
 
       - name: ansible-lint
         uses: reviewdog/action-ansiblelint@57a0721547b93e9925bd05bf20ea17810bb3cff7  # v1.20.0
@@ -62,7 +62,7 @@ jobs:
           persist-credentials: false
 
       - name: Set up Python 3
-        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97  # v7.0.0
+        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0  # v7.1.0
 
       - name: yamllint
-        uses: reviewdog/action-yamllint@3224b47de22a2fd9c8c0fbc120e6d0049d1f5060  # v1.25.2
+        uses: reviewdog/action-yamllint@8f84f0fb670d777d3e584ef50faf60eb61605b2a  # v1.25.3
